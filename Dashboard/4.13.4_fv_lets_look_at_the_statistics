@@ -1,0 +1,31 @@
+*** Settings ***
+Default Tags      dashboard
+Library           SeleniumLibrary
+Resource          ../Resource/genericfunctions.robot
+Suite Teardown    Close all browsers
+
+*** Variables ***
+${ACCOUNT_SETTINGS_URL}     https://verify-getrestaurantapp-v1-0-0.d3bydizwdiwzbp.amplifyapp.com/user/account-settings
+
+*** Test Cases ***
+4.13.4.1_fv_Lets_look_at_the_statistics_sales_Category
+    login pkg1 
+    Wait Until Element Is Visible        xpath=//*[@href="/user/dashboard"] 
+    Scroll Element Into View     xpath=//*[@id = "chartYesterday"]
+    Click Element   xpath=//*[@id = "salesCategory"]
+    #Page Should Contain    Pick Up
+    Page Should Contain    Dine In
+    #Page Should Contain    Combined
+    
+4.13.4.2_fv_Lets_look_at_the_statistics_Sales_Timeline
+    Wait Until Element Is Visible        xpath=//*[@href="/user/dashboard"] 
+    Scroll Element Into View     xpath=//*[@id = "chartYesterday"]
+    Wait Until Element Is Visible       xpath=//*[@id = "salesTimeline"]     
+    Page Should Contain    Yesterday 
+    Click Element   xpath=//*[@id = "salesTimeline"] 
+    Page Should Contain    This Week
+    Page Should Contain    Last Week
+  
+ 
+    
+

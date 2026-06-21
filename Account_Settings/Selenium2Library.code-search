@@ -1,0 +1,2248 @@
+# Query: Selenium2Library
+# ContextLines: 1
+
+738 results - 116 files
+
+CopyofTestAutomationBranch/GRApp Test cases/web_app_test_cases/Resources/button.robot:
+  1  ***Settings***
+  2: Library    SeleniumLibrary
+  3  Library   Collections
+
+CopyofTestAutomationBranch/GRApp Test cases/web_app_test_cases/Resources/dropdownlist.robot:
+   1  ***Settings***
+   2: Library    SeleniumLibrary
+   3  Library    Collections
+
+  16      [arguments]  ${listID}
+  17:    @{items}=    SeleniumLibrary.Get List Items    xpath=//*[@id="${listID}"]   
+  18    
+
+  23      [arguments]  ${listID}
+  24:     SeleniumLibrary.Select From List By Index   xpath=//*[@id="${listID}"]    0
+  25      Log To Console  Selected from list at index 0 - ${listID}  
+
+  29      [arguments]  ${listID}
+  30:     SeleniumLibrary.Select From List By Index   xpath=//*[@id="${listID}"]    1
+  31      Log To Console  Selected from list at index 1 - ${listID}  
+
+  54      [arguments]  ${listID}
+  55:     #${Status}   SeleniumLibrary.Select from list by index    ${listID}    0    1
+  56:     ${Status}   SeleniumLibrary.Select from list by index    ${listID}    1    2
+  57:     SeleniumLibrary.Select from list by index    ${listID}    0
+  58      Run Keyword If  ${Status}== None     Log to Console    List does not allow multiple selection - ${listID}
+
+  62        #Element Should Not Be Visible      xpath=//select[@id="${listID}"]
+  63:       ${Status}   SeleniumLibrary.Element Should Be Disabled    xpath=//select[@id="${listID}"]
+  64        Run Keyword If  ${Status}== None     Log to Console    List is frozen - ${listID}
+
+  67        [arguments]  ${listID}
+  68:       ${Status}   SeleniumLibrary.Element Should Be Enabled      xpath=//select[@id="${listID}"]
+  69        Run Keyword If  ${Status}== None     Log to Console    List is not frozen - ${listID}
+
+  79      [arguments]   ${listID}   ${Index_string}
+  80:     SeleniumLibrary.Wait Until Element Is Visible  xpath=//*[@class="btn btn-primary btn-round"]  10s
+  81:     SeleniumLibrary.Click Element At Coordinates   xpath=//select[@id="${listID}"][@class="form-control"]  0    0
+  82:     ${Status}    SeleniumLibrary.Select From List By Index     xpath=//select[@id="${listID}"][@class="form-control"]    ${Index_string}
+  83      Run Keyword If  ${Status}==None   Log to Console    "Get List of items from....${listID}. Select item by Index....${Index_string}."
+
+  86      [arguments]   ${listID}   ${list_label}
+  87:     SeleniumLibrary.Wait Until Element Is Visible  xpath=//*[@class="btn btn-primary btn-round"]  10s
+  88:     SeleniumLibrary.Click Element At Coordinates   xpath=//select[@id="${listID}"][@class="form-control"]  0    0
+  89:     ${Status}   SeleniumLibrary.Select From List By Label     xpath=//select[@id="${listID}"][@class="form-control"]    ${list_label}
+  90      Run Keyword If  ${Status}==None   Log to Console    "Get List of items from....${listID}. Select item by Label....${list_label}."
+
+  93      [arguments]   ${listID}   ${list_label}
+  94:     SeleniumLibrary.Wait Until Element Is Visible  xpath=//*[@class="btn btn-primary btn-round"]  10s
+  95:     SeleniumLibrary.Click Element At Coordinates   xpath=//select[@id="${listID}"][@class="form-control"]  0    0
+  96:     @{List_items}=  SeleniumLibrary.Get List Items   xpath=//select[@id="${listID}"][@class="form-control"]  
+  97      ${Status}   Should Not Contain  xpath=//select[@id="${listID}"][@class="form-control"]  ${list_label}
+
+CopyofTestAutomationBranch/GRApp Test cases/web_app_test_cases/Resources/genericfunctions.robot:
+    1  *** Settings ***
+    2: Library   SeleniumLibrary
+    3  Library    FakerLibrary    locale=en_US
+
+   35      Set Browser Implicit Wait    50
+   36: #    SeleniumLibrary.Input Text  xpath=//input[@id="loginID"]    consultant2@ikabit.com
+   37:     SeleniumLibrary.Input Text  xpath=//input[@id="loginID"]    sheshan@gmail.com
+   38      #abhinn.p@ikabit.com
+   39:      SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12345
+   40       #test123A
+   41: #    SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12@34
+   42:     SeleniumLibrary.Input Text  xpath=//input[@id="companyID"]     4019527193
+   43      #99115109115
+
+   48  logout and close browser
+   49:     SeleniumLibrary.Click Element   xpath=//*[@href="/logout"]  
+   50      Close Browser 
+
+   52  primary houseaddress
+   53:     SeleniumLibrary.Input Text    xpath=//input[@id="paddress1"]     ${Address1}
+   54:     SeleniumLibrary.Input Text    xpath=//input[@id="paddress2"]      ${Address2}
+   55:     SeleniumLibrary.Input Text    xpath=//input[@id="pcity"]     ${City}
+   56:     SeleniumLibrary.Input Text    xpath=//input[@id="pstate"]     ${State}
+   57:     SeleniumLibrary.Input Text    xpath=//input[@id="pzip"]     ${Zipcode}
+   58      
+
+   60    
+   61:     SeleniumLibrary.Input Text      xpath=//input[@id="maddress1"]     ${Address1}
+   62:     SeleniumLibrary.Input Text    xpath=//input[@id="maddress2"]      ${Address2}
+   63:     SeleniumLibrary.Input Text    xpath=//input[@id="mcity"]     ${City}
+   64:     SeleniumLibrary.Input Text    xpath=//input[@id="mstate"]     ${State}
+   65:     SeleniumLibrary.Input Text    xpath=//input[@id="mzip"]     ${Zipcode}
+   66      
+
+   69      Log to Console    "Updating data"
+   70:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@class="btn btn-primary btn-round"]
+   71:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@class="btn btn-primary btn-round"]  10s
+   72:     SeleniumLibrary.Click Button    xpath=//*[@class="btn btn-primary btn-round"]
+   73      #Page Should Contain    Updating Data
+   74:     SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@class="btn btn-round btn-primary"]   50s
+   75:     SeleniumLibrary.Click Button    xpath=//*[@class="btn btn-round btn-primary"]
+   76:     SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@class="btn btn-primary btn-round"]    50s
+   77  
+
+   79      set selenium speed	1
+   80:     SeleniumLibrary.Click Button   xpath=//*[@class="btn btn-primary btn-round"]
+   81      #Page Should Contain    Validation Error
+   82:     SeleniumLibrary.Wait Until Page Contains Element  xpath=//*[@class="btn btn-round btn-primary"]   30s 
+   83:     SeleniumLibrary.Click Button   xpath=//*[@class="btn btn-round btn-primary"]
+   84:     SeleniumLibrary.Wait Until Page Contains Element  xpath=//*[@class="btn btn-primary btn-round"]    30
+   85   
+
+   88      Scroll Element Into View    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]
+   89:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]  30s
+   90:     SeleniumLibrary.Click Button   xpath=//*[@id="update"][@class="btn btn-primary btn-round"]
+   91      #Page Should Contain    Updating Data
+   92:     SeleniumLibrary.Click Button   xpath=//*[@id="successDismiss"][@class="btn btn-round btn-primary"]
+   93:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]  50
+   94    
+
+   99      Scroll Element Into View    xpath=//*[@class="btn btn-primary btn-round"]
+  100:     #SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]  50s
+  101:     SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@class="btn btn-primary btn-round"]  50s
+  102:     #SeleniumLibrary.Click Button   xpath=//*[@id="update"][@class="btn btn-primary btn-round"]
+  103:     SeleniumLibrary.Click Button   xpath=//*[@class="btn btn-primary btn-round"]
+  104      Page Should Contain    Validation Error
+  105:     SeleniumLibrary.Click Button   xpath=//*[@id="validationMendatoryDismiss"][@class="btn btn-round btn-primary"]
+  106  
+
+  114      Log to Console    "\nOpening ${modulename} > ${form}...."   
+  115:     SeleniumLibrary.Click Element   xpath=//*[@href="/manage"]
+  116:     SeleniumLibrary.Click Element   xpath=//*[@href="/manage/${modulename}"]
+  117:     SeleniumLibrary.Click Element   xpath=//*[@href="/manage/${modulename}${form}"]
+  118      
+
+  133      FOR    ${index}    IN RANGE    1    ${max_retry_count}
+  134:         ${IsxEqual}=    Run Keyword And Return Status    SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="${id}"]
+  135:         ${IsEqual}=    Run Keyword And Return Status    SeleniumLibrary.wait until element is visible    xpath=//*[@id="${id}"]    15
+  136          Run Keyword If    '${IsEqual}'=='True'    Run Keywords    EXIT FOR LOOP
+
+  143      set selenium speed	1
+  144:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  145:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		user@xyz
+  146:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  147:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  148      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  149:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"] 
+  150      #Page Should Contain    Validation Error
+  151:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  152:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		user.com
+  153:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  154:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  155      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  156:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"] 
+  157      #Page Should Contain    Validation Error
+  158:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  159:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		user
+  160:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  161:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  162      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  163:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"] 
+  164      #Page Should Contain    Validation Error
+  165:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  166:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		A@b@c@domain.com
+  167:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  168:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  169      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  170:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  171      #Page Should Contain    Validation Error
+  172:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  173:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		.test@domain.com
+  174:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  175:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  176      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  177:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  178      #Page Should Contain    Validation Error
+  179:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  180:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		test@domain..com 
+  181:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  182:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  183      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  184:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  185      #Page Should Contain    Validation Error
+  186:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  187:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@domain.com 
+  188:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  189:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  190      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  191:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  192      #Page Should Contain    Validation Error
+  193:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  194:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@domain.com 
+  195:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  196:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  197      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  198:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  199      #Page Should Contain    Validation Error
+  200:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  201:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example@-domain.com
+  202:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  203:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  204      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  205:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  206      #Page Should Contain    Validation Error
+  207:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  208:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example@domain-.com
+  209:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  210:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  211      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  212:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  213  
+  214      #Page Should Contain    Validation Error
+  215:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  216:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abc”test”email@domain.com
+  217:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  218:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  219      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  220:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  221  
+  222      #Page Should Contain    Validation Error
+  223:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  224:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abc is”not\valid@domain.com
+  225:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  226:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  227      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  228:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  229  
+  230      #Page Should Contain    Validation Error
+  231:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  232:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abc\ is\”not\valid@domain.com
+  233:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${buttonid}"]
+  234:     SeleniumLibrary.Click Element   xpath=//*[@id="${buttonid}"]
+  235      wait until element is visible    xpath=//*[@id="${cancelid}"]
+  236:     SeleniumLibrary.Click Element   xpath=//*[@id="${cancelid}"]
+  237      log to console   incorrect email formats are rejected
+
+  240      [Arguments]    ${id}
+  241:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+  242:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 User1@test.netname@gmail.com
+  243      Clear text    xpath=//*[@id="${id}"]
+  244:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 my@m.co.in
+  245      Clear text    xpath=//*[@id="${id}"]
+  246:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 Test123@Domain
+  247      Clear text    xpath=//*[@id="${id}"]
+  248:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 a@domain.com
+  249      Clear text    xpath=//*[@id="${id}"]
+  250:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 #!$%&'*+-/=?^_{}|~@domain.org
+  251      Clear text    xpath=//*[@id="${id}"]
+  252:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 "abc.(),:;<>[]\".EMAIL.\"email@\ \"email\".test"@strange.domain.com
+  253      Clear text    xpath=//*[@id="${id}"]
+  254:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 “+*()<>[]:,;@\\”!#$%&’-/=?^_`{}| ~.a”@domain.org
+  255      Clear text    xpath=//*[@id="${id}"]
+  256:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 admin@mailserver1
+  257      Clear text    xpath=//*[@id="${id}"]
+  258:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example@localhost
+  259      Clear text    xpath=//*[@id="${id}"]
+  260:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example-abc@abc-domain.com
+  261      Clear text    xpath=//*[@id="${id}"]
+  262:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@com
+  263      Clear text    xpath=//*[@id="${id}"]
+  264:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@localserver
+  265      Clear text    xpath=//*[@id="${id}"]
+  266:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@[IPv6:2018:db8::1]
+  267      Clear text    xpath=//*[@id="${id}"]
+  268:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 xyz@example.com
+  269      Clear text    xpath=//*[@id="${id}"]
+
+CopyofTestAutomationBranch/GRApp Test cases/web_app_test_cases/Resources/numericalvalue.robot:
+   1  ***Settings***
+   2: Library    SeleniumLibrary
+   3  
+
+  16      [arguments]  ${ID}
+  17:     #SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]  0
+  18      #Log To Console  ${ID} validation for zero value
+  19:     ${number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]   0  
+  20:     ${number_zero}      SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]     
+  21      ${Status}   Should Not Be Equal       ${number}       ${number_zero}  
+
+  25      [arguments]  ${ID}
+  26:     #SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]  0
+  27      #Log To Console  ${ID} validation for zero value
+  28:     ${negative_number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]   ${NEGATIVE_NUM}  
+  29:     ${number}   SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]
+  30:     ${Status}   SeleniumLibrary.Element Should Not Contain    xpath=//input[@id="${ID}"]    -
+  31      Run Keyword If  ${Status}== None     Log To Console  Field does not contain negative sign - ${ID}
+
+  35      [arguments]  ${ID}
+  36:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID} "]   -1 
+  37      Log To Console  ${ID} validation for negative 
+
+  41      [arguments]  ${ID}
+  42:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    Alphabet
+  43:     ${Status}   SeleniumLibrary.Element Should Not Contain    xpath=//input[@id="${ID}"]    Alphabet
+  44      Run Keyword If  ${Status}== None     Log to Console   Field does not allow Alphabets - ${ID} 
+
+  47      [arguments]  ${ID}
+  48:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    )&^%$$
+  49:     ${Status}   SeleniumLibrary.Element Should Not Contain    xpath=//input[@id="${ID}"]    )&^%$$
+  50      Run Keyword If  ${Status}== None     Log to Console  Field does not allow special characters - ${ID} 
+
+  53      [arguments]  ${ID}
+  54:     ${number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]           33334444645543435656565635465653
+  55:     ${number_value}      SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]  
+  56      ${NUMERIC_LENGTH}    Get Length    ${number_value}
+  57      ${NUMERIC_LENGTH}   Convert To String    ${NUMERIC_LENGTH}  
+  58:     ${box text}=       SeleniumLibrary.Get Element Attribute    xpath=//input[@id="${ID}"]    attribute=maxlength
+  59      ${Status}   Should Be Equal  ${box text}     ${NUMERIC_LENGTH}
+
+  64      #[arguments]  ${ID}
+  65:     #${NUMERIC_LENGTH} =  SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    4545445567 
+  66:     #${box text}=       SeleniumLibrary.Get Element Attribute    xpath=//input[@id="${ID}"]    attribute=maxlength
+  67      #Should Be Equal  ${box text}     ${NUMERIC_LENGTH}
+
+  71      [arguments]  ${ID}
+  72:    ${number_space}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    3333 44446  
+  73:    ${number_nospace}      SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]     
+  74     ${Status}   Should Not Be Equal       ${number_space}       ${number_nospace}  
+
+  79     [arguments]  ${ID}
+  80:    ${number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    0000012345  
+  81:    ${number_noleadingzeros}      SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]     
+  82     ${Status}   Should Not Be Equal       ${number}     ${number_noleadingzeros}  
+
+CopyofTestAutomationBranch/GRApp Test cases/web_app_test_cases/Resources/textfield.robot:
+    1  ***Settings***
+    2: Library    SeleniumLibrary
+    3  
+
+   19     [arguments]  ${ID}
+   20:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    ${EMPTY}
+   21      Log To Console  ${ID} validation for NULL 
+
+   24      [arguments]  ${ID}
+   25:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]      @#$@!@$
+   26:     ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//input[@id="${ID}"]    attribute=pattern
+   27      Should Be Equal    ${PATTERN}   ${SPL_CHAR}   
+
+   31      [arguments]  ${ID}
+   32:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]      0123456789
+   33:     ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//input[@id="${ID}"]    attribute=pattern
+   34      Should Be Equal    ${PATTERN}   ${NUM}   
+
+   39  
+   40:      ${NO_ALPHABET} =  SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    Alphabet123
+   41      
+   42:     ${box text}=       SeleniumLibrary.Get Value    xpath=//input[@id="${ID}"]
+   43      Should Not Be Equal    ${box text}     ${NO_ALPHABET}
+
+   51  
+   52:     ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//*[@id="${ID}"]    attribute=pattern
+   53      Should Not Be Equal    ${PATTERN}   ${SPL_CHAR}   
+
+   60  
+   61:      ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//*[@id="${ID}"]    attribute=pattern
+   62       Should Not Be Equal    ${PATTERN}   ${NUM}   
+
+   89       [arguments]  ${ID}
+   90:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MIN_LENGTH}
+   91       Log to Console  ${ID}  Minimum length validation
+
+   94       [arguments]  ${ID}
+   95:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MAX_LENGTH}
+   96       Log to Console  ${ID} Maximum length  validation
+
+   99        [arguments]  ${ID}
+  100:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${EMPTY}
+  101:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${SPACE}
+  102: #     ${box text}       SeleniumLibrary.Get Value    xpath=//input[@id="${ID}"]
+  103       Element Text Should Not Be   xpath=//input[@id="${ID}"]    ${SPACE}   
+
+  108         [arguments]  ${ID}
+  109:          SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${EMPTY}
+  110:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]     ${SPACE}
+  111      Element Text Should Not Be   xpath=//input[@id="${ID}"]    ${SPACE} 
+
+  116  	[arguments]  ${ID}   ${ID2}	${val1}   ${val2}   ${ID3}   ${ID4}
+  117: 	SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]	${val1}
+  118: 	SeleniumLibrary.Input Text    xpath=//input[@id="${ID2}"]	${val2}
+  119  	Scroll element into view	xpath=//*[@id="${ID3}"]
+  120: 	SeleniumLibrary.Click Element 	   xpath=//*[@id="${ID3}"]
+  121  	wait until element is visible     xpath=//*[@id="${ID4}"]
+  122  	log to console    Error message is displayed upon mismatch
+  123: 	SeleniumLibrary.Click Element 	   xpath=//*[@id="${ID4}"]
+  124  
+
+test_automation/Web_App_Restaurant Personnel/Login/4.1.1.1_fv_create_a_login.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.2.1- FV Tests for User Information.robot:
+    1  *** Settings ***
+    2: Library           SeleniumLibrary
+    3  Resource          ../Resources/dropdownlist.robot
+
+   77      Input text		xpath=//*[@id="phno"]	1233456789
+   78:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${emailid}"]
+   79      confirm email error		email 	confirmemail	g@gmail.com	f@gmail.com
+   80:     SeleniumLibrary.Input text		xpath=//*[@id="${password}"]		test123@
+   81:     SeleniumLibrary.Input text		xpath=//*[@id="${confirmpassword}"]		test123@
+   82:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${submit}"]
+   83:     SeleniumLibrary.Click Element   xpath=//*[@id="${submit}"]
+   84      wait until element is visible    xpath=//*[@id="${errorok}"]
+   85:     SeleniumLibrary.Click Element   xpath=//*[@id="${errorok}"]  
+   86      log to console	confirm email mismatch shows error
+
+   93      Input text		xpath=//*[@id="phno"]	1233456789
+   94:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${emailid}"]
+   95       input text		xpath=//*[@id="${id}"]		g@gmail.com	
+
+   97      confirm password error     password    confirmpassword    test123@	test123#
+   98:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${submit}"]
+   99:     SeleniumLibrary.Click Element   xpath=//*[@id="${submit}"]
+  100      wait until element is visible    xpath=//*[@id="${errorok}"]
+  101:      SeleniumLibrary.Click Element   xpath=//*[@id="${errorok}"]  
+  102       log to console	confirm password mismatch shows error
+
+test_automation/Web_App_Restaurant Personnel/Login/4.2.1.1_fv_select_a_package.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.2.4 - Need Help Signing In.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resources/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.3.1.1_fv_billing_information.robot:
+  1  *** Settings ***
+  2: Library    SeleniumLibrary
+  3  Resource   ../Resource/button.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.3.1.2_fv_get_restaurant_app.robot:
+  1  *** Settings ***
+  2: Library    SeleniumLibrary
+  3  Resource   ../Resource/button.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.3.1.3_fv_get_restaurant_app_login.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.4.1.1._fv_forgot_login_account_recovery.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.4.1.2_fv_forgot_password_account_recovery.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.4.1.3_fv_forgot_restaurant_id_account_recovery.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/4.4.1.4_fv_help_page.robot:
+  2  Default Tags        help
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Login/5.1.5_Forgot_Credentials.robot:
+    1  *** Settings ***
+    2: Library           SeleniumLibrary
+    3  Resource          ../Resource/genericfunctions.robot
+
+   12      log to console    clicking need help
+   13:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+   14      Wait Until Element Is Visible    xpath=//*[@id="forgotloginid"]    60
+   15      log to console    clicking forgot Login ID
+   16:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotloginid"]
+   17      log to console    leaving phone number as blank
+
+   33      log to console    clicking need help
+   34:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+   35      log to console    clicking forgot Login
+   36      Wait Until Element Is Visible    xpath=//*[@id="forgotloginid"]    60
+   37:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotloginid"]
+   38      log to console    giving wrong phone number as input 4563785637
+
+   54      log to console    clicking need help
+   55:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+   56      log to console    clicking forgot Login
+   57      Wait Until Element Is Visible    xpath=//*[@id="forgotloginid"]    60
+   58:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotloginid"]
+   59      log to console    giving wrong phone number as input 4563785637
+
+   68      Wait Until Element Is Visible    xpath=//*[@id="forgotloginid"]    60
+   69:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotloginid"]
+   70      log to console    giving wrong phone number as input 4563785637
+
+   79      Wait Until Element Is Visible    xpath=//*[@id="forgotloginid"]    60
+   80:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotloginid"]
+   81      log to console    giving wrong phone number as input 4563785637
+
+   97      log to console    clicking need help
+   98:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+   99      log to console    clicking forgot Login
+  100      Wait Until Element Is Visible    xpath=//*[@id="forgotloginid"]    60
+  101:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotloginid"]
+  102      log to console    giving correct phone number as input 4563785637
+
+  116      log to console    clicking need help
+  117:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  118      log to console    clicking forgot Password
+  119      Wait Until Element Is Visible    xpath=//*[@id="forgotpassword"]    60
+  120:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotpassword"]
+  121      log to console    leaving both login ID & Phone Number as blank
+
+  137      log to console    clicking need help
+  138:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  139      log to console    clicking forgot Password
+  140      Wait Until Element Is Visible    xpath=//*[@id="forgotpassword"]    60
+  141:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotpassword"]
+  142      log to console    giving invalid email id as xgaurav.c@ikabit.com
+
+  157      log to console    clicking need help
+  158:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  159      log to console    clicking forgot Password
+  160      Wait Until Element Is Visible    xpath=//*[@id="forgotpassword"]    60
+  161:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotpassword"]
+  162      log to console    giving incorrect phone number as input 4563785637
+
+  178      log to console    clicking need help
+  179:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  180      log to console    clicking forgot Password
+  181      Wait Until Element Is Visible    xpath=//*[@id="forgotpassword"]    60
+  182:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotpassword"]
+  183      log to console    giving incorrect phone number as input 4563785637
+
+  193      log to console    clicking need help
+  194:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  195      log to console    clicking forgot Login
+  196      Wait Until Element Is Visible    xpath=//*[@id="forgotpassword"]    60
+  197:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotpassword"]
+  198      log to console    giving incorrect phone number as input 4563785637
+
+  208      log to console    clicking need help
+  209:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  210      log to console    clicking forgot Login
+  211      Wait Until Element Is Visible    xpath=//*[@id="forgotpassword"]    60
+  212:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotpassword"]
+  213      log to console    giving incorrect phone number as input 4563785637
+
+  228      log to console    clicking need help
+  229:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  230      log to console    clicking forgot Restaurant ID
+  231      Wait Until Element Is Visible    xpath=//*[@id="forgotcompany"]    60
+  232:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotcompany"]
+  233      log to console    leaving email and phone number as blank
+
+  247      log to console    clicking need help
+  248:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  249      log to console    clicking forgot Restaurant ID
+  250      Wait Until Element Is Visible    xpath=//*[@id="forgotcompany"]    60
+  251:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotcompany"]
+  252      log to console    giving invalid email id as xgaurav.c@ikabit.com
+
+  267      log to console    clicking need help
+  268:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  269      log to console    clicking forgot Restaurant ID
+  270      Wait Until Element Is Visible    xpath=//*[@id="forgotcompany"]    60
+  271:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotcompany"]
+  272      log to console    giving incorrect phone number as input 4563785637
+
+  287      log to console    clicking need help
+  288:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  289      log to console    entering wrong data trial 1
+
+  291      Wait Until Element Is Visible    xpath=//*[@id="forgotcompany"]    60
+  292:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotcompany"]
+  293      log to console    giving incorrect phone number as input 4563785637
+
+  328      log to console    clicking need help
+  329:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  330      log to console    clicking forgot Restaurant ID
+  331      Wait Until Element Is Visible    xpath=//*[@id="forgotcompany"]    60
+  332:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotcompany"]
+  333      log to console    giving valid email id as gaurav.c@ikabit.com
+
+  345      log to console    clicking need help
+  346:     SeleniumLibrary.Click Element    xpath=//*[@id="needhelp"]
+  347      log to console    clicking forgot Restaurant ID
+  348      Wait Until Element Is Visible    xpath=//*[@id="forgotcompany"]    60
+  349:     SeleniumLibrary.Click Element    xpath=//*[@id="forgotcompany"]
+  350      log to console    giving correct phone number as input 4563785637
+
+test_automation/Web_App_Restaurant Personnel/Login/5.1.7_Logout.robot:
+   1  *** Settings ***
+   2: Library           SeleniumLibrary
+   3  Resource          ../Resource/dropdownlist.robot
+
+  25      click element    xpath=//*[@id='logout']
+  26:     SeleniumLibrary.Click Element    xpath=//*[@id="root"]/div/div[2]/div[3]/div/div/div/div/button
+  27      Wait Until Element Is Visible    xpath=//*[@id="login"]
+
+test_automation/Web_App_Restaurant Personnel/Menu/4.7.1.3_fv_submission_confimation.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant Personnel/Resources/button.robot:
+  1  ***Settings***
+  2: Library    SeleniumLibrary
+  3  Library   Collections
+
+test_automation/Web_App_Restaurant Personnel/Resources/Checkbox.robot:
+  1  *** Settings ***
+  2: Library   SeleniumLibrary
+  3  Library    FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant Personnel/Resources/date.robot:
+  1  *** Settings ***
+  2: Library   SeleniumLibrary
+  3  Library    FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant Personnel/Resources/dropdownlist.robot:
+    1  *** Settings ***
+    2: Library    SeleniumLibrary
+    3  Library    Collections
+
+   16      [arguments]  ${listID}
+   17:     @{items}=    SeleniumLibrary.Get List Items    xpath=//*[@id="${listID}"]   
+   18      Log To Console  List items for ${listID} - ${items}   
+
+   22      [arguments]  ${listID}
+   23:     SeleniumLibrary.Select From List By Index   xpath=//*[@id="${listID}"]    0
+   24      Log To Console  Selected from list at index 0 - ${listID}  
+
+   33  #[arguments]  ${listID}
+   34: #SeleniumLibrary.Select From List By Index   xpath=//*[@id="${listID}"]    1
+   35  #Log To Console  Selected from list at index 1 - ${listID}  
+
+   50        #Element Should Not Be Visible      xpath=//select[@id="${listID}"]
+   51:       ${Status}   SeleniumLibrary.Element Should Be Disabled    xpath=//select[@id="${listID}"]
+   52        Run Keyword If  ${Status}== None     Log to Console    List is frozen - ${listID}
+
+   55  #[arguments]  ${listID}
+   56: #${Status}   SeleniumLibrary.Element Should Be Enabled      xpath=//select[@id="${listID}"]
+   57  #Run Keyword If  ${Status}== None     Log to Console    List is not frozen - ${listID}
+
+   73      [arguments]  ${listID}
+   74:     #${Status}   SeleniumLibrary.Select from list by index    ${listID}    0    1
+   75:     ${Status}   SeleniumLibrary.Select from list by index    ${listID}    1    2
+   76:     SeleniumLibrary.Select from list by index    ${listID}    0
+   77      Run Keyword If  ${Status}== None     Log to Console    List does not allow multiple selection - ${listID}
+
+   80      [arguments]  ${listID}
+   81:     ${Status}   SeleniumLibrary.Select from list by index    ${listID}    1    2
+   82:     SeleniumLibrary.Select from list by index    ${listID}    0
+   83      Run Keyword If  ${Status}==True     Log to Console    List allows multiple selection - ${listID}
+
+   92  #[arguments]   ${listID}   ${Index_string}
+   93: #SeleniumLibrary.Wait Until Element Is Visible  xpath=//*[@class="btn btn-primary btn-round"]  10s
+   94: #SeleniumLibrary.Click Element At Coordinates   xpath=//select[@id="${listID}"][@class="form-control"]  0    0
+   95: #${Status}    SeleniumLibrary.Select From List By Index     xpath=//select[@id="${listID}"][@class="form-control"]    ${Index_string}
+   96  #Run Keyword If  ${Status}==None   Log to Console    "Get List of items from....${listID}. Select item by Index....${Index_string}."
+
+   99  #[arguments]   ${listID}   ${list_label}
+  100: #SeleniumLibrary.Wait Until Element Is Visible  xpath=//*[@class="btn btn-primary btn-round"]  10s
+  101: #SeleniumLibrary.Click Element At Coordinates   xpath=//select[@id="${listID}"][@class="form-control"]  0    0
+  102: #${Status}   SeleniumLibrary.Select From List By Label     xpath=//select[@id="${listID}"][@class="form-control"]    ${list_label}
+  103  #Run Keyword If  ${Status}==None   Log to Console    "Get List of items from....${listID}. Select item by Label....${list_label}."
+
+  106   #[arguments]   ${listID}   ${list_label}
+  107:  #SeleniumLibrary.Wait Until Element Is Visible  xpath=//*[@class="btn btn-primary btn-round"]  10s
+  108:  #SeleniumLibrary.Click Element At Coordinates   xpath=//select[@id="${listID}"][@class="form-control"]  0    0
+  109:  #@{List_items}=  SeleniumLibrary.Get List Items   xpath=//select[@id="${listID}"][@class="form-control"]  
+  110   #${Status}   Should Not Contain  xpath=//select[@id="${listID}"][@class="form-control"]  ${list_label}
+
+test_automation/Web_App_Restaurant Personnel/Resources/Email ID.robot:
+    1  *** Settings ***
+    2: Library   SeleniumLibrary
+    3  Library    FakerLibrary    locale=en_US
+
+   31      [Arguments]    ${id}
+   32:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]  
+   33:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 user@xyz
+   34      log to console    testing with text..........user@xyz
+   35      Clear Element text    xpath=//*[@id="${id}"]
+   36:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 user.com
+   37      log to console    testing with text..........user.com
+   38      Clear Element text    xpath=//*[@id="${id}"]
+   39:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 Onlytext
+   40      log to console    testing with text..........Onlytext
+   41      Clear Element text    xpath=//*[@id="${id}"]
+   42:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example.com
+   43      log to console    testing with text..........example.com
+   44      Clear Element text    xpath=//*[@id="${id}"]
+   45:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 A@b@c@domain.com
+   46      log to console    testing with text..........A@b@c@domain.com
+   47      Clear Element text    xpath=//*[@id="${id}"]
+   48:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 .test@domain.com
+   49      log to console    testing with text...........test@domain.com
+   50      Clear Element text    xpath=//*[@id="${id}"]
+   51:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@domain.com
+   52      log to console    testing with text..........test@domain.com
+   53      Clear Element text    xpath=//*[@id="${id}"]
+   54:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@domain.com
+   55      log to console    testing with text..........test@domain.com
+   56      Clear Element text    xpath=//*[@id="${id}"]
+   57:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example@-domain.com
+   58      log to console    testing with text..........example@-domain.com
+   59      Clear Element text    xpath=//*[@id="${id}"]
+   60:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abctestemail@domain.com
+   61      log to console    testing with text..........mail@domain.com
+   62      Clear Element text    xpath=//*[@id="${id}"]
+   63:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abc isnot\valid@domain.com
+   64      log to console    testing with text..........abc isnot\valid@domain.com
+   65      Clear Element text    xpath=//*[@id="${id}"]
+   66:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@[IPv6:2018:db8::1]
+   67      log to console    testing with text..........test@[IPv6:2018:db8::1]
+   68      Clear Element text    xpath=//*[@id="${id}"]
+   69:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abc\ is\not\valid@domain.com
+   70      log to console    testing with text..........abc\ is\not\valid@domain.com
+
+   75      [Arguments]    ${id}
+   76:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+   77:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 User1@test.netname@gmail.com
+   78      log to console    testing with text...........User1@test.netname@gmail.com
+   79      Clear Element text    xpath=//*[@id="${id}"]
+   80:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 my@m.co.in
+   81      log to console    testing with text...........my@m.co.in
+   82      Clear Element text    xpath=//*[@id="${id}"]
+   83:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 Test123@Domain
+   84      log to console    testing with text...........Test123@Domain
+   85      Clear Element text    xpath=//*[@id="${id}"]
+   86:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 a@domain.com
+   87      log to console    testing with text...........a@domain.com
+   88      Clear Element text    xpath=//*[@id="${id}"]
+   89:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 @domain.org
+   90      log to console    testing with text...........domain.org
+   91      Clear Element text    xpath=//*[@id="${id}"]
+   92:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 .test"@strange.domain.com
+   93      log to console    testing with text...........""email\".test"@strange.domain.com
+   94      Clear Element text    xpath=//*[@id="${id}"]
+   95:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 a@domain.org
+   96      log to console    testing with text............a@domain.org
+   97      Clear Element text    xpath=//*[@id="${id}"]
+   98:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 admin@mailserver1
+   99      log to console    testing with text...........admin@mailserver1
+  100      Clear Element text    xpath=//*[@id="${id}"]
+  101:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example@localhost
+  102      log to console    testing with text...........example@localhost
+  103      Clear Element text    xpath=//*[@id="${id}"]
+  104:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example-abc@abc-domain.com
+  105      log to console    testing with text...........exampleabc@abc-domain.com
+  106      Clear Element text    xpath=//*[@id="${id}"]
+  107:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@com
+  108      log to console    testing with text...........test@com
+  109      Clear Element text    xpath=//*[@id="${id}"]
+  110:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@localserver
+  111      log to console    testing with text...........test@localserver
+  112      Clear Element text    xpath=//*[@id="${id}"]
+  113:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@[IPv6:2018:db8::1]
+  114      log to console    testing with text...........test@[IPv6:2018:db8::1]
+  115      Clear Element text    xpath=//*[@id="${id}"]
+  116:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 xyz@example.com
+  117      log to console    testing with text...........xyz@example.com
+
+test_automation/Web_App_Restaurant Personnel/Resources/File Upload.robot:
+  1  *** Settings ***
+  2: Library    SeleniumLibrary
+  3  
+
+test_automation/Web_App_Restaurant Personnel/Resources/genericfunctions.robot:
+    1  *** Settings ***
+    2: Library   SeleniumLibrary
+    3  Library    FakerLibrary    locale=en_US
+
+   57      #Set Browser Implicit wait    2
+   58:     #    SeleniumLibrary.Input Text  xpath=//input[@id="loginID"]    consultant2@ikabit.com
+   59:     SeleniumLibrary.Input Text  xpath=//input[@id="email"]    sheshan@gmail.com
+   60      #abhinn.p@ikabit.com
+   61:      SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12345
+   62       #test123A
+   63:     #    SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12@34
+   64:     SeleniumLibrary.Input Text  xpath=//input[@id="company-id"]     4019527193
+   65      #99115109115
+
+   78      #Set Browser Implicit wait    2
+   79:     #    SeleniumLibrary.Input Text  xpath=//input[@id="loginID"]    consultant2@ikabit.com
+   80:     SeleniumLibrary.Input Text  xpath=//input[@id="email"]    sheshan@gmail.com
+   81      #abhinn.p@ikabit.com
+   82:      SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12345
+   83       #test123A
+   84:     #    SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12@34
+   85:     SeleniumLibrary.Input Text  xpath=//input[@id="company-id"]     4019527193
+   86      #99115109115
+
+   99      #Set Browser Implicit wait    2
+  100:     #    SeleniumLibrary.Input Text  xpath=//input[@id="loginID"]    consultant2@ikabit.com
+  101:     SeleniumLibrary.Input Text  xpath=//input[@id="email"]    sheshan@gmail.com
+  102      #abhinn.p@ikabit.com
+  103:      SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12345
+  104       #test123A
+  105:     #    SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12@34
+  106:     SeleniumLibrary.Input Text  xpath=//input[@id="company-id"]     4019527193
+  107      #99115109115
+
+  120      #Set Browser Implicit wait    2
+  121:     #    SeleniumLibrary.Input Text  xpath=//input[@id="loginID"]    consultant2@ikabit.com
+  122:     SeleniumLibrary.Input Text  xpath=//input[@id="email"]    sheshan@gmail.com
+  123      #abhinn.p@ikabit.com
+  124:      SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12345
+  125       #test123A
+  126:     #    SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12@34
+  127:     SeleniumLibrary.Input Text  xpath=//input[@id="company-id"]     4019527193
+  128      #99115109115
+
+  141  logout and close browser
+  142:     SeleniumLibrary.Click Element   xpath=//*[@href="/logout"]  
+  143      Close Browser
+
+  237  primary houseaddress
+  238:     SeleniumLibrary.Input Text    xpath=//input[@id="paddress1"]     ${Address1}
+  239:     SeleniumLibrary.Input Text    xpath=//input[@id="paddress2"]      ${Address2}
+  240:     SeleniumLibrary.Input Text    xpath=//input[@id="pcity"]     ${City}
+  241:     SeleniumLibrary.Input Text    xpath=//input[@id="pstate"]     ${State}
+  242:     SeleniumLibrary.Input Text    xpath=//input[@id="pzip"]     ${Zipcode}
+  243      
+
+  245    
+  246:     SeleniumLibrary.Input Text      xpath=//input[@id="maddress1"]     ${Address1}
+  247:     SeleniumLibrary.Input Text    xpath=//input[@id="maddress2"]      ${Address2}
+  248:     SeleniumLibrary.Input Text    xpath=//input[@id="mcity"]     ${City}
+  249:     SeleniumLibrary.Input Text    xpath=//input[@id="mstate"]     ${State}
+  250:     SeleniumLibrary.Input Text    xpath=//input[@id="mzip"]     ${Zipcode}
+  251      
+
+  254      Log to Console    "Updating data"
+  255:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@class="btn btn-primary btn-round"]
+  256:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@class="btn btn-primary btn-round"]  10s
+  257:     SeleniumLibrary.Click Button    xpath=//*[@class="btn btn-primary btn-round"]
+  258      #Page Should Contain    Updating Data
+  259:     SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@class="btn btn-round btn-primary"]   50s
+  260:     SeleniumLibrary.Click Button    xpath=//*[@class="btn btn-round btn-primary"]
+  261:     SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@class="btn btn-primary btn-round"]    50s
+  262  
+
+  264      set selenium speed	1
+  265:     SeleniumLibrary.Click Button   xpath=//*[@class="btn btn-primary btn-round"]
+  266      #Page Should Contain    Validation Error
+  267:     SeleniumLibrary.Wait Until Page Contains Element  xpath=//*[@class="btn btn-round btn-primary"]   30s 
+  268:     SeleniumLibrary.Click Button   xpath=//*[@class="btn btn-round btn-primary"]
+  269:     SeleniumLibrary.Wait Until Page Contains Element  xpath=//*[@class="btn btn-primary btn-round"]    30
+  270   
+
+  273      Scroll Element Into View    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]
+  274:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]  30s
+  275:     SeleniumLibrary.Click Button   xpath=//*[@id="update"][@class="btn btn-primary btn-round"]
+  276      #Page Should Contain    Updating Data
+  277:     SeleniumLibrary.Click Button   xpath=//*[@id="successDismiss"][@class="btn btn-round btn-primary"]
+  278:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]  50
+  279    
+
+  284      Scroll Element Into View    xpath=//*[@class="btn btn-primary btn-round"]
+  285:     #SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@id="update"][@class="btn btn-primary btn-round"]  50s
+  286:     SeleniumLibrary.Wait Until Page Contains Element    xpath=//*[@class="btn btn-primary btn-round"]  50s
+  287:     #SeleniumLibrary.Click Button   xpath=//*[@id="update"][@class="btn btn-primary btn-round"]
+  288:     SeleniumLibrary.Click Button   xpath=//*[@class="btn btn-primary btn-round"]
+  289      Page Should Contain    Validation Error
+  290:     SeleniumLibrary.Click Button   xpath=//*[@id="validationMendatoryDismiss"][@class="btn btn-round btn-primary"]
+  291  
+
+  296      Log to Console    "\nOpening ${modulename} > ${form}...."   
+  297:     SeleniumLibrary.Click Element   xpath=//*[@href="/manage"]
+  298:     SeleniumLibrary.Click Element   xpath=//*[@href="/manage/${modulename}"]
+  299:     SeleniumLibrary.Click Element   xpath=//*[@href="/manage/${modulename}${form}"]
+  300      
+
+  315      FOR    ${index}    IN RANGE    1    ${max_retry_count}
+  316:         ${IsxEqual}=    Run Keyword And Return Status    SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="${id}"]
+  317:         ${IsEqual}=    Run Keyword And Return Status    SeleniumLibrary.wait until element is visible    xpath=//*[@id="${id}"]    15
+  318          Run Keyword If    '${IsEqual}'=='True'    Run Keywords    EXIT FOR LOOP
+
+  329      Scroll Element Into View    xpath=//*[@id=""]
+  330:     SeleniumLibrary.Scroll element into view	xpath=//*[@id=""]
+  331:     SeleniumLibrary.Input text		xpath=//*[@id=""]		${data}
+  332:     SeleniumLibrary.Input text		xpath=//*[@id=""]		${data}
+  333:     SeleniumLibrary.Input text		xpath=//*[@id=""]		test123@
+  334:     SeleniumLibrary.Input text		xpath=//*[@id=""]		test123@
+  335:     SeleniumLibrary.Scroll element into view	xpath=//*[@id=""]
+  336:     SeleniumLibrary.Click Element   xpath=//*[@id=""]
+  337      wait until element is visible    xpath=//*[@id=""]
+  338:      SeleniumLibrary.Click Element   xpath=//*[@id=""]
+  339      log to console   incorrect email formats are rejected
+
+test_automation/Web_App_Restaurant Personnel/Resources/numericalvalue.robot:
+    1  *** Settings ***
+    2: Library    SeleniumLibrary
+    3  
+
+   22      [arguments]  ${ID}
+   23:     #SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]  0
+   24      #Log To Console  ${ID} validation for zero value
+   25:     ${number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]   0  
+   26:     ${number_zero}      SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]     
+   27      ${Status}   Should Not Be Equal       ${number}       ${number_zero}  
+
+   31      [arguments]  ${ID}
+   32:     #SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]  0
+   33      #Log To Console  ${ID} validation for zero value
+   34:     ${negative_number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]   ${NEGATIVE_NUM}  
+   35:     ${number}   SeleniumLibrary.Get Value   xpath=//*[@id="${ID}"]
+   36:     ${Status}   SeleniumLibrary.Element Should Not Contain    xpath=//input[@id="${ID}"]    -
+   37      Run Keyword If  ${Status}== True     Log To Console  Field does not contain negative sign - ${ID}
+
+   41      #[arguments]  ${ID}
+   42:     #SeleniumLibrary.Input Text   xpath=//input[@id="${ID} "]   -1 
+   43      #Log To Console  ${ID} validation for negative 
+
+   47      [arguments]  ${ID}
+   48:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    Alphabet
+   49:     ${Status}   SeleniumLibrary.Element Should Not Contain    xpath=//*[@id="${ID}"]    Alphabet
+   50      Run Keyword If  ${Status}==True     Log to Console   Field does not allow Alphabets - ${ID} 
+
+   54      Input text    xpath=//*[@id="${ID}"]    @#$@!@$
+   55:     ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//*[@id="${ID}"]    attribute=pattern
+   56      ${t}    Should Not Be Equal    ${PATTERN}   @#$@!@$   
+
+   63       Clear Element Text    xpath=//*[@id="${ID}"]
+   64:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MIN_LENGTH}
+   65       ${p}=    get value    xpath=//input[@id="${ID}"]
+
+   73       Clear Element Text    xpath=//*[@id="${ID}"]
+   74:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MAX_LENGTH}
+   75       ${p}=    get value    xpath=//input[@id="${ID}"]
+
+   81      #[arguments]  ${ID}
+   82:     #${NUMERIC_LENGTH} =  SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    4545445567 
+   83:     #${box text}=       SeleniumLibrary.Get Element Attribute    xpath=//input[@id="${ID}"]    attribute=maxlength
+   84      #Should Be Equal  ${box text}     ${NUMERIC_LENGTH}
+
+   89      reload page
+   90:     ${number_space}   SeleniumLibrary.Input Text   xpath=//*[@id="${ID}"]    3333 44446  
+   91:     ${number_nospace}      SeleniumLibrary.Get Text   xpath=//input[@id="${ID}"]     
+   92      ${Status}   Should Not Be Equal       ${number_space}       ${number_nospace}  
+
+  120     [arguments]  ${ID}
+  121:    ${number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    0000012345  
+  122:    ${number_noleadingzeros}      SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]     
+  123     ${Status}   Should Not Be Equal       ${number}     ${number_noleadingzeros}  
+
+  127        [arguments]  ${ID}
+  128:       SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${EMPTY}
+  129:       SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${SPACE}
+  130: #     ${box text}       SeleniumLibrary.Get Value    xpath=//input[@id="${ID}"]
+  131        Element Text Should Not Be   xpath=//input[@id="${ID}"]    ${SPACE}   
+
+  136       [arguments]   ${ID}
+  137:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${EMPTY}
+  138:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]     ${SPACE}
+  139       Element Text Should Not Be   xpath=//input[@id="${ID}"]    ${SPACE} 
+
+  160      [arguments]  ${ID}
+  161:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    ${EMPTY}
+  162      Log To Console  ${ID} validation for NULL 
+
+  172     #[arguments]  ${ID}
+  173:    #${number}   SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    1234500000
+  174:    #${number_noleadingzeros}      SeleniumLibrary.Get Value   xpath=//input[@id="${ID}"]     
+  175    # ${Status}   Should Not Be Equal       ${number}     ${number_noleadingzeros}  
+
+  179      # [arguments]  ${ID}
+  180:     # SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MIN_NUMERIC_LENGTH}
+  181       #Log to Console  ${ID}  Minimum length validation
+
+  184       #[arguments]  ${ID}
+  185:     # SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MAX_NUMERIC_LENGTH}
+  186      # Log to Console  ${ID} Maximum length  validation
+
+test_automation/Web_App_Restaurant Personnel/Resources/radio button.robot:
+  1  *** Settings ***
+  2: Library   SeleniumLibrary
+  3  Library    FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant Personnel/Resources/Text on form.robot:
+  1  *** Settings ***
+  2: Library   SeleniumLibrary
+  3  Library    FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant Personnel/Resources/textfield.robot:
+    1  *** Settings ***
+    2: Library    SeleniumLibrary
+    3  Library    pyperclip
+
+   17      [arguments]  ${ID}
+   18:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    ${EMPTY}
+   19      Log To Console  ${ID} validation for NULL 
+
+   22      [arguments]  ${ID}
+   23:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]      @#$@!@$
+   24:     ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//input[@id="${ID}"]    attribute=pattern
+   25      Should Contain      ${SPL_CHAR}   ${PATTERN}
+
+   30      Input text    xpath=//*[@id="${ID}"]    @#$@!@$
+   31:     ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//*[@id="${ID}"]    attribute=pattern
+   32      ${t}    Should Not Be Equal    ${PATTERN}   @#$@!@$   
+
+   37      [arguments]  ${ID}
+   38:     SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]      0123456789
+   39:     ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//input[@id="${ID}"]    attribute=pattern
+   40      Should Contain   ${NUM}  ${PATTERN} 
+
+   45       clear element text    xpath=//*[@id="${ID}"]
+   46:      ${PATTERN}=  SeleniumLibrary.Get Element Attribute     xpath=//*[@id="${ID}"]    attribute=pattern
+   47       ${t}    Should Not Be Equal    ${PATTERN}   12345687890   
+
+   54       Clear Element Text    xpath=//*[@id="${ID}"]
+   55:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MIN_LENGTH}
+   56       ${p}=    Get Value    xpath=//*[@id="${ID}"]
+
+   62       Clear Element Text    xpath=//input[@id="${ID}"]
+   63:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]   ${MAX_LENGTH}
+   64       ${p}=    get value    xpath=//input[@id="${ID}"]
+
+   68  	[arguments]  ${ID}   ${ID2}	${val1}   ${val2}   ${ID3}   ${ID4}
+   69: 	SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]	${val1}
+   70: 	SeleniumLibrary.Input Text    xpath=//input[@id="${ID2}"]	${val2}
+   71  	Scroll element into view	xpath=//*[@id="${ID3}"]
+   72: 	SeleniumLibrary.Click Element 	   xpath=//*[@id="${ID3}"]
+   73  	wait until element is visible     xpath=//*[@id="${ID4}"]
+   74  	log to console    Error message is displayed upon mismatch
+   75: 	SeleniumLibrary.Click Element 	   xpath=//*[@id="${ID4}"]
+   76      
+
+  101      #[arguments]  ${ID}
+  102:    # ${NO_ALPHABET} =  SeleniumLibrary.Input Text   xpath=//input[@id="${ID}"]    Alphabet123
+  103:    # ${box text}=       SeleniumLibrary.Get Value    xpath=//input[@id="${ID}"]
+  104     # Should Not Be Equal    ${box text}     ${NO_ALPHABET}
+
+  110        [arguments]  ${ID}
+  111:       SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${EMPTY}
+  112:       SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${SPACE}
+  113:     #     ${box text}       SeleniumLibrary.Get Value    xpath=//input[@id="${ID}"]
+  114        Element Text Should Not Be   xpath=//input[@id="${ID}"]    ${SPACE}   
+
+  119       [arguments]  ${ID}
+  120:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${EMPTY}
+  121:      SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]     ${SPACE}
+  122       Element Text Should Not Be   xpath=//input[@id="${ID}"]    ${SPACE} 
+
+  154      [arguments]	${ID}
+  155:     SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${strspc}
+  156      ${pattern}=	Get value	xpath=//*[@id="${ID}"]
+
+  161      [arguments]	${ID}
+  162:     SeleniumLibrary.Input Text    xpath=//input[@id="${ID}"]    ${strspc}
+  163      ${pattern}=	Get text	xpath=//*[@id="${ID}"]
+
+test_automation/Web_App_Restaurant Personnel/Resources/URL.robot:
+  1  *** Settings ***
+  2: Library   SeleniumLibrary
+  3  Library    FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant Personnel/Restaurant Info/4.5.1.1_fv_restaurant_info_account_info.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Library            AutoItLibrary
+
+test_automation/Web_App_Restaurant Personnel/Restaurant Info/4.5.1.2_fv_restaurant_info_Logo_tagline.robot:
+   1  *** Settings ***
+   2: Library           SeleniumLibrary
+   3  Library            AutoItLibrary
+
+  46      wait until element is visible    xpath=//*[@id="link_for_truck_spreadsheet_download"]    7
+  47:     SeleniumLibrary.Click Element    xpath=//*[@id="link_for_truck_spreadsheet_download"]
+  48      Wait Until Keyword Succeeds    1 min    2 sec    File Should Exist    C:\\Users\\Gaurav\\Downloads\\prepost_inspection_truck_default_list.xlsx
+
+  75      wait until element is visible    xpath=//*[@id="link_for_truck_spreadsheet_download"]    7
+  76:     SeleniumLibrary.Click Element    xpath=//*[@id="link_for_truck_spreadsheet_download"]
+  77      Wait Until Keyword Succeeds    1 min    2 sec    File Should Exist    C:\\Users\\Gaurav\\Downloads\\prepost_inspection_truck_default_list.xlsx
+
+test_automation/Web_App_Restaurant Personnel/Restaurant Info/4.5.1.3_fv_restaurant_info_policies_and_payments.robot:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Library            AutoItLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/4.11.1.3_fv_account_settings_addresses.robot:
+    2  Default Tags    fvacctsettings_addresses
+    3: Library    SeleniumLibrary
+    4  Library    String
+
+  145  Scrolldown_to_see_save_button
+  146:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save3"]
+  147  
+
+  257          
+  258: #SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save3"]
+  259  button_save_rightname_new
+
+  305      Click Element    xpath=//*[@id="panel3"]
+  306:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save3"]
+  307      
+
+  342  Scrolldown_to_see_footer
+  343:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@href="${IKABIT_PRIVACY_POLICY_URL}"]
+  344  verify_footer_text
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/4.11.1.4_fv_account_settings_payment_preferences.robot:
+  2  Default Tags    fvacctsettings_pymtpref
+  3: Library    SeleniumLibrary
+  4  Library    String
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/4.11.1.5_fv_account_settings_notification_preferences.robot:
+  2  Default Tags    fvnotpref
+  3: Library    SeleniumLibrary
+  4  Library    String
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/4.11.1.6_fv_account_settings_privacy_policy.robot:
+   2  Default Tags	  fvaccountsettings
+   3: Library           SeleniumLibrary
+   4  Resource          ../Resource/dropdownlist.robot
+
+  24      wait until element is visible        xpath=//*[@id="panel1"]    10
+  25:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@class="panel5"]
+  26      
+
+  31      #wait until element is visible        xpath=//*[@id="panel1"]    10
+  32:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@class="panel5"]
+  33  
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/4.11.1.7_fv_account_settings_terms_and_conditions.robot:
+   2  Default Tags	  fvaccountsettings
+   3: Library           SeleniumLibrary
+   4  Resource          ../Resource/dropdownlist.robot
+
+  27      #wait until element is visible        xpath=//*[@id="panel1"]    10
+  28:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@class="panel5"]
+  29  
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.7.1.1_Account_Settings_Profile_save.robot:
+    2  Default Tags      profile
+    3: Library           SeleniumLibrary
+    4  #Library           FakerLibrary    locale=en_US
+
+   29      #Save the new data
+   30:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save1"]
+   31:     SeleniumLibrary.Click Button    xpath=//*[@id="save1"]
+   32:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="firstName"]
+   33  
+
+   69      #Save the new data
+   70:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save1"]
+   71:     SeleniumLibrary.Click Button    xpath=//*[@id="save1"]
+   72:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="firstName"]
+   73      Page Should Not Contain    Field cannot be Empty
+
+  125      #Click Save without editing any fields, no errors should be reported. #GRA-1580
+  126:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save1"]
+  127:     SeleniumLibrary.Click Button    xpath=//*[@id="save1"]
+  128:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="firstName"]
+  129      Page Should Not Contain    Field cannot be Empty
+
+  135      
+  136:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save1"]
+  137:     SeleniumLibrary.Click Button    xpath=//*[@id="save1"]
+  138:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="firstName"]
+  139      Page Should Not Contain    Field cannot be Empty
+
+  156      Reload Page
+  157:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="firstName"]
+  158      Page Should Not Contain    Field cannot be Empty
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.7.1.2_Account_Settings_Profile_cancel.robot:
+    2  Default Tags      profile
+    3: Library           SeleniumLibrary
+    4  #Library           FakerLibrary    locale=en_US
+
+   64      #Click Cancel
+   65:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="cancel1"]
+   66:     SeleniumLibrary.Click Button    xpath=//*[@id="cancel1"]
+   67  
+
+  128      #Click Cancel without editing any fields, no errors should be reported.
+  129:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="cancel1"]
+  130:     SeleniumLibrary.Click Button    xpath=//*[@id="cancel1"]
+  131:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="firstName"]
+  132      Page Should Not Contain    Field cannot be Empty
+
+  138      
+  139:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="cancel1"]
+  140:     SeleniumLibrary.Click Button    xpath=//*[@id="cancel1"]
+  141:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="firstName"]
+  142      Page Should Not Contain    Field cannot be Empty
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.7.1.3_4_Account_Settings_Profile_data_retention_during_form_navigation.robot:
+  2  Default Tags      profile
+  3: Library           SeleniumLibrary
+  4  #Library           FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.7.1.5_Account_Settings_Profile_missing_mandatory_field.robot:
+  2  Default Tags      profile
+  3: Library           SeleniumLibrary
+  4  #Library           FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.7.1.6_Account_Settings_profile_update_phone_number.robot:
+   2  Default Tags      notificationspref
+   3: Library           SeleniumLibrary
+   4  #Library           FakerLibrary    locale=en_US
+
+  23      Input Text    xpath=//*[@id="phone"]    +919902250479
+  24:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save1"]
+  25:     SeleniumLibrary.Click Button    xpath=//*[@id="save1"]
+  26      Page Should Contain Element    xpath=//*[@id="verifyPhoneNumber"]
+
+  42      Input Text    xpath=//*[@id="phone"]    +919902250479
+  43:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save1"]
+  44:     SeleniumLibrary.Click Button    xpath=//*[@id="save1"]
+  45      Page Should Contain Element    xpath=//*[@id="verifyPhoneNumber"]
+
+  67      Input Text    xpath=//*[@id="phone"]    +919902250479
+  68:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save1"]
+  69:     SeleniumLibrary.Click Button    xpath=//*[@id="save1"]
+  70      Page Should Contain Element    xpath=//*[@id="verifyPhoneNumber"]
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.7.2_Account_Settings_Change_Password.robot:
+  2  Default Tags      changepasswd
+  3: Library           SeleniumLibrary
+  4  #Library           FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.7.3_Account_Settings_Notifications_Preferences.robot:
+    2  Default Tags      notificationspref
+    3: Library           SeleniumLibrary
+    4  #Library           FakerLibrary    locale=en_US
+
+   31  
+   32:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+   33:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+   34      
+
+   38      Page Should Contain Element      xpath=//*[@id="save5"]
+   39:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="save5"]
+   40      BuiltIn.Sleep   1s
+   41:     SeleniumLibrary.Click Button    xpath=//*[@id="save5"]
+   42:     #SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="newsletterCheck"]
+   43      Wait Until Page Contains     Account Information Saved Successfully    10s
+
+   48      log to console    clicking account settings
+   49:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@href="/user/account-settings"]
+   50      click element    xpath=//*[@href="/user/account-settings"]
+
+   90  
+   91:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+   92:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+   93  
+
+   97      Page Should Contain Element      xpath=//*[@id="cancel5"]
+   98:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="cancel5"]
+   99      BuiltIn.Sleep   1s
+  100:     SeleniumLibrary.Click Button    xpath=//*[@id="cancel5"]
+  101:     #SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id="newsletterCheck"]
+  102  
+
+  152  
+  153:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+  154:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+  155      
+
+  164  
+  165:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+  166:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+  167  
+
+  177      
+  178:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+  179:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+  180      
+
+  207  
+  208:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+  209:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+  210      
+
+  235      
+  236:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+  237:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+  238      
+
+  265  
+  266:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+  267:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+  268      
+
+  287      
+  288:     SeleniumLibrary.Element Should Be Disabled    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - frozen
+  289:     SeleniumLibrary.Checkbox Should Be Selected    xpath=//input[@id="policyUpdates"]    #default state of checkbox is - selected
+  290      
+
+test_automation/Web_App_Restaurant_Personnel/Account_Settings/5.10.1.5_leftmenu_test_navigation_accountsettings_valid:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/4.8.1.1_fv_admin_settings_permissions_and_approvals.robot:
+  2  Default Tags	  fvadminsettings_perms_appr
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/4.10.1.1_fv_admin_settings_subn_billing_Subscription.robot:
+    2  Default Tags	  fvsubscription
+    3: Library           SeleniumLibrary
+    4  Resource          ../Resource/dropdownlist.robot
+
+   79  Scroll_element_into_view_saveChanges1
+   80:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="saveChanges1"]
+   81      
+
+   96  Scroll_element_into_view_logins
+   97:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="logins"]
+   98      #Click Element    xpath=//*[@id="logins"]
+
+  104  Scroll_element_into_view_saveChanges1
+  105:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="saveChanges1"]
+  106  #No_of_locations2_ddl_click_element
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/4.10.1.2_fv_admin_settings_subn_billing_Billing.robot:
+    2  Default Tags	  fvsubnbilling
+    3: Library           SeleniumLibrary
+    4  Resource          ../Resource/dropdownlist.robot
+
+   31      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+   32:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="cvv"]
+   33  
+
+  216      #Scroll to the bottom of the page
+  217:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="unsubscribe"]
+  218  
+
+  407  Scroll_to_Payment_Info_section_cancel_button
+  408:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="cancel1"]
+  409  #Not reading up text heading6 h6 - BILLING
+
+  427  #Scroll_to_Billing_Info_section_cvv
+  428:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="cvv"]
+  429  #Text_on_form_9
+
+  432  Scroll_to_Unsubscribe_section
+  433:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="unsubscribe"]
+  434  Text_on_form_5
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.1_Admin_Settings_Approvals_SingleRestaurant.robot:
+  2  Default Tags      approvals_singlerest
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.2_Admin_Settings_Permissions_SingleRestaurant.robot:
+  2  Default Tags      permissions_singlerest
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.3_Admin_Settings_Approvals_Multi_Restaurant.robot:
+  2  Default Tags      approvals_multirest
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.4_Admin_Settings_SubnBilling_Subscription.robot:
+  2  Default Tags      subscription
+  3: Library           SeleniumLibrary
+  4  Suite Teardown     Close all browsers
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.5_Admin_Settings_SubnBilling_Address.robot:
+  2  Default Tags      adminsettings_address
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.6_Admin_Settings_SubnBilling_Billing_OLD_NonModularTests_DoNotUse.robot:
+    3  #Default Tags      adminsettings_billing
+    4: Library           SeleniumLibrary
+    5  Library           RPA.Browser.Selenium
+
+   81      #Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+   82:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+   83      
+
+  112      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  113:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  114      Sleep   15s
+
+  125      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  126:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  127      Wait Until Page Contains Element     ${IDforRadioButton}    15
+
+  136      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  137:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  138      Wait Until Page Contains Element     ${IDforRadioButton}    15
+
+  146      #ID for delete icon includes the card no to help identify which card the user wants to delete
+  147:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  148      
+
+  165      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  166:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  167      Page should not contain element    ${IDforRadioButton}
+
+  176      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  177:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  178      Page should not contain element    ${IDforRadioButton}
+
+  185      #ID for edit icon includes the card no to help identify which card the user wants to delete
+  186:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  187      Click Button    xpath=//*[@id=${IDforEditIcon}]
+
+  221      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  222:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  223      Sleep   15s
+
+  292      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  293:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  294      
+
+  324      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  325:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  326      Sleep   15s
+
+  336      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  337:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  338      
+
+  368      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  369:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  370      Sleep   15s
+
+  381      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  382:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  383      
+
+  413      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  414:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  415      Sleep   15s    
+
+  425      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  426:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  427      
+
+  457      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  458:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  459      Sleep   15s
+
+  469      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  470:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  471      
+
+  501      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  502:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  503      Sleep   15s
+
+  514      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  515:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  516      
+
+  547      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  548:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  549      Sleep   15s
+
+  559      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  560:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  561      
+
+  592      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  593:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  594      Sleep   15s
+
+  604      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  605:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  606      
+
+  637      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  638:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  639      Sleep   15s
+
+  649      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  650:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  651      
+
+  682      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  683:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  684      Sleep   15s
+
+  694      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  695:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  696      
+
+  727      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  728:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  729      Sleep   15s
+
+  739      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  740:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  741      
+
+  767      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  768:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  769      Sleep   15s
+
+  780      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  781:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  782      
+
+  808      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  809:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  810      Sleep   15s
+
+  827      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  828:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  829      
+
+  855      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    5
+  856:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  857      Sleep   15s
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.6_Admin_Settings_SubnBilling_Billing.robot:
+    2  Default Tags      adminsettings_billing
+    3: Library           SeleniumLibrary
+    4  Library           RPA.Browser.Selenium
+
+  216      Sleep   15s
+  217:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  218      Page Should Not Contain    Duplicate Card
+
+  235      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  236:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  237      log to console    Wait until card appears on the page to verify
+
+  250      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  251:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  252      Log To Console    Wait until card appears on the page to verify
+
+  260      Log To Console    Delete card to run test in continuation
+  261:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  262      
+
+  277      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  278:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  279      Page should not contain element    xpath=//*[@id="visa4242"] 
+
+  288      Wait Until Element Is Visible        xpath=//*[@id="pricingPlan"]    10
+  289:     SeleniumLibrary.Scroll Element Into View    xpath=//*[@id="next"]
+  290      Page should not contain element     xpath=//*[@id="visa4242"]
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.8.7_Admin_Settings_SubnBilling_Unsubscribe.robot:
+  2  Default Tags      unsubscribe_billing
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Admin_Settings/5.10.1.6_leftmenu_test_navigation_adminsettings_valid:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Dashboard/4.13.2_fv_net_sales:
+  2  Default Tags      dashboard
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Dashboard/4.13.3_fv_top_sellers:
+  2  Default Tags      dashboard
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Dashboard/4.13.4_fv_lets_look_at_the_statistics:
+  2  Default Tags      dashboard
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Dashboard/5.9.4_Graph_SalesStatistics.robot:
+  2  Default tags      dashboard
+  3: Library           SeleniumLibrary
+  4  Library           Eyes-Selenium
+
+test_automation/Web_App_Restaurant_Personnel/Dashboard/5.9.5_6_7_Dashboard_SalesGraph_InsufficientData.robot:
+  2  Default tags      insufficientdata
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Login/5.1.1_User_Login.robot:
+  124     log to console    not entering login ID.....................
+  125:    #SeleniumLibrary.Input Text    xpath=//*[@id='email']    ${PKG1_USER_ID}
+  126     log to console    entering password...................${PKG1_PASSWORD}
+
+  153     log to console    Not entering password...................
+  154:    #SeleniumLibrary.Input Text    xpath=//*[@id='password']    ${PKG1_PASSWORD}
+  155     log to console    entering restaurant id.........................${PKG1_COMPANY_ID}
+
+  238     log to console    leaving restaurant id as blank.........................
+  239:    #SeleniumLibrary.Input Text    xpath=//input[@id="company-id"]    ${EMPTY}
+  240     #Clear Element Text    xpath=//input[@id="company-id"]
+
+  242     #Should Be Equal As Strings    ${temp_restid}     ${EMPTY}
+  243:    #SeleniumLibrary.Input Text    xpath=//input[@id="company-id"]    ${PKG1_COMPANY_ID}
+  244     log to console    clicking submit
+
+test_automation/Web_App_Restaurant_Personnel/Login/5.1.5_Forgot_Credentials.robot:
+    2  Default Tags       forgotcredentials
+    3: Library           SeleniumLibrary
+    4  Library            FakerLibrary
+
+   21      log to console    clicking need help
+   22:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+   23      log to console    clicking forgot password
+   24      Wait Until Element Is Visible    xpath=//*[@id="forgot-password"]    5
+   25:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-password"]
+   26      
+
+  134      log to console    clicking need help
+  135:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  136      Wait Until Element Is Visible    xpath=//*[@id="forgot-login-id"]    10
+  137      log to console    clicking forgot Login ID
+  138:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-login-id"]
+  139      log to console    leaving phone number as blank
+
+  156      log to console    clicking need help
+  157:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  158      log to console    clicking forgot Login
+  159      Wait Until Element Is Visible    xpath=//*[@id="forgot-login-id"]    10
+  160:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-login-id"]
+  161      log to console    giving wrong phone number as input 4563785637
+
+  183      log to console    clicking need help
+  184:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  185      log to console    clicking forgot Login
+  186      Wait Until Element Is Visible    xpath=//*[@id="forgot-login-id"]    4
+  187:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-login-id"]
+  188      
+
+  451      log to console    clicking need help
+  452:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  453      log to console    clicking forgot Login
+  454      Wait Until Element Is Visible    xpath=//*[@id="forgot-login-id"]    4
+  455:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-login-id"]
+  456      log to console    giving correct phone number as input 4563785637
+
+  470      log to console    clicking need help
+  471:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  472      log to console    clicking forgot password
+  473      Wait Until Element Is Visible    xpath=//*[@id="forgot-password"]    4
+  474:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-password"]
+  475      log to console    leaving email as blank
+
+  493      log to console    clicking need help
+  494:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  495      log to console    clicking forgot password
+  496      Wait Until Element Is Visible    xpath=//*[@id="forgot-password"]    4
+  497:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-password"]
+  498      log to console    giving invalid email id as abc @gmail.com
+
+  509      #log to console    clicking need help
+  510:     #SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  511      #log to console    clicking forgot Login
+  512      #Wait Until Element Is Visible    xpath=//*[@id="forgot-password"]    6
+  513:     #SeleniumLibrary.Click Element    xpath=//*[@id="forgot-password"]
+  514      #log to console    giving incorrect phone number as input 4563785637
+
+  528      log to console    clicking need help
+  529:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  530      log to console    clicking forgot password
+  531      Wait Until Element Is Visible    xpath=//*[@id="forgot-restaurant-id"]    4
+  532:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-restaurant-id"]
+  533      log to console    leaving phone number as blank
+
+  551      #log to console    clicking need help
+  552:     #SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  553      #log to console    clicking forgot Login
+  554      #Wait Until Element Is Visible    xpath=//*[@id="forgot-restaurant-id"]    6
+  555:     #SeleniumLibrary.Click Element    xpath=//*[@id="forgot-restaurant-id"]
+  556      #log to console    giving invalid email id as xgaurav.c@ikabit.com
+
+  571      log to console    clicking need help
+  572:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  573      log to console    clicking forgot Login
+  574      Wait Until Element Is Visible    xpath=//*[@id="forgot-restaurant-id"]    6
+  575:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-restaurant-id"]
+  576      log to console    giving wrong phone number as input 4563785637
+
+  591      log to console    clicking need help
+  592:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  593      log to console    clicking forgot Restaurant ID
+  594      Wait Until Element Is Visible    xpath=//*[@id="forgot-restaurant-id"]    6
+  595:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-restaurant-id"]
+  596      
+
+  782      #log to console    clicking need help
+  783:     #SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  784      #log to console    clicking forgot Login
+  785      #Wait Until Element Is Visible    xpath=//*[@id="forgot-restaurant-id"]    6
+  786:     #SeleniumLibrary.Click Element    xpath=//*[@id="forgot-restaurant-id"]
+  787      #log to console    giving invalid email id as gaurav.c@ikabit.com
+
+  797      log to console    clicking need help
+  798:     SeleniumLibrary.Click Element    xpath=//*[@id="need-help-sign-in"]
+  799      log to console    clicking forgot Restaurant ID
+  800      Wait Until Element Is Visible    xpath=//*[@id="forgot-restaurant-id"]    6
+  801:     SeleniumLibrary.Click Element    xpath=//*[@id="forgot-restaurant-id"]
+  802      log to console    giving correct phone number as input 4563785637
+
+test_automation/Web_App_Restaurant_Personnel/Login/5.1.6_Remember_Me.robot:
+    2  Default Tags      rememberme
+    3: Library           SeleniumLibrary
+    4  Resource          ../Resource/dropdownlist.robot
+
+   22      log to console    entering login............grapp.user101@gmail.com
+   23:     SeleniumLibrary.Input Text    xpath=//*[@id='email']    grapp.user101@gmail.com
+   24      log to console    entering password...................Test@123
+   25:     SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+   26      log to console    entering restaurant id.........................71834503 
+   27:     SeleniumLibrary.Input Text    xpath=//input[@id="company-id"]    71834503 
+   28      log to console    checkbox is selected
+   29      log to console    clicking submit
+   30:     SeleniumLibrary.Click Element    xpath=//*[@id='submit']
+   31  
+
+   37      click element    xpath=//*[@href='/login']
+   38:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id='email']
+   39      log to console    checking if login contains grapp.user101@gmail.com
+   40:     #SeleniumLibrary.Element Attribute value should be    xpath=//*[@id='email']    value    grapp.user17@gmail.com
+   41      ${pattern}=    Get Value    xpath=//*[@id='email']
+
+   43      log to console    test pass
+   44:     #SeleniumLibrary.Element Text Should Be    xpath=//*[@id='password']
+   45      log to console    checking if company contains 71834503 
+   46:     #SeleniumLibrary.Element Attribute Value Should Be    xpath=//*[@id='company-id']    value    71834503 
+   47      ${pattern}=    Get Value    xpath=//*[@id='company-id']
+
+   52      log to console    Reloaded Page
+   53:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id='email']
+   54      Checkbox Should Be Selected    xpath=//*[@id="checkRemember"]
+   55      log to console    checking if login contains grapp.user101@gmail.com
+   56:     #SeleniumLibrary.Element Attribute value should be    xpath=//*[@id='email']    value    grapp.user17@gmail.com
+   57      ${pattern}=    Get Value    xpath=//*[@id='email']
+
+   59      log to console    test pass
+   60:     #SeleniumLibrary.Element Text Should Be    xpath=//*[@id='password']
+   61      log to console    checking if company contains 71834503 
+   62:     #SeleniumLibrary.Element Attribute Value Should Be    xpath=//*[@id='company-id']    value    71834503 
+   63      ${pattern}=    Get Value    xpath=//*[@id='company-id']
+
+   65      log to console    test pass
+   66:     SeleniumLibrary.Close Browser
+   67  
+
+   75      click element    xpath=//*[@href='/login']
+   76:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id='email']
+   77      Checkbox Should Be Selected    xpath=//*[@id="checkRemember"]
+
+   83      log to console    checking if login contains grapp.user101@gmail.com
+   84:     #SeleniumLibrary.Element Attribute value should be    xpath=//*[@id='email']    value    grapp.user17@gmail.com
+   85      ${pattern}=    Get Value    xpath=//*[@id='email']
+
+   88      log to console    checking if password contains blank
+   89:     #SeleniumLibrary.Element Attribute Value Should Be    xpath=//*[@id='password']    value    Test@1234
+   90      ${pattern}=    Get Value    xpath=//*[@id='password']
+
+   93      log to console    checking if company contains 71834503 
+   94:     #SeleniumLibrary.Element Attribute Value Should Be    xpath=//*[@id='company-id']    value    31532808
+   95      ${pattern}=    Get Value    xpath=//*[@id='company-id']
+
+   97      log to console    test pass
+   98:     SeleniumLibrary.Close Browser
+   99  
+
+  106      log to console    entering login............grapp.user101@gmail.com
+  107:     SeleniumLibrary.Input Text    xpath=//*[@id='email']    grapp.user101@gmail.com
+  108      log to console    entering password...................Test@123
+  109:     SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+  110      log to console    entering restaurant id.........................71834503 
+  111:     SeleniumLibrary.Input Text    xpath=//input[@id="company-id"]    71834503 
+  112      Checkbox Should Be Selected    xpath=//*[@id="checkRemember"]
+
+  114      log to console    clicking submit
+  115:     SeleniumLibrary.Click Element    xpath=//*[@id='submit']
+  116      Wait Until element is visible    xpath=//*[@href='/user/restaurant-info']     10s
+
+  124      click element    xpath=//*[@href='/login']
+  125:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id='email']
+  126      log to console    checking if login contains blank
+  127:     #SeleniumLibrary.Element Attribute value should be    xpath=//*[@id='email']    value    grapp.user17@gmail.com
+  128      ${pattern}=    Get Value    xpath=//*[@id='email']
+
+  131      log to console    test pass
+  132:     #SeleniumLibrary.Element Text Should Be    xpath=//*[@id='password']
+  133      log to console    checking if company contains blank
+  134:     #SeleniumLibrary.Element Attribute Value Should Be    xpath=//*[@id='company-id']    value    31532808
+  135      ${pattern}=    Get Value    xpath=//*[@id='company-id']
+
+  137      log to console    checking if password contains blank
+  138:     #SeleniumLibrary.Element Attribute Value Should Be    xpath=//*[@id='password']    value    Test@1234
+  139      ${pattern}=    Get Value    xpath=//*[@id='password']
+
+  152      log to console    entering login............grapp.user101@gmail.com
+  153:     SeleniumLibrary.Input Text    xpath=//*[@id='email']    grapp.user101@gmail.com
+  154      log to console    entering password...................Test@123
+  155:     SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+  156      log to console    entering restaurant id.........................71834503 
+  157:     SeleniumLibrary.Input Text    xpath=//input[@id="company-id"]    71834503 
+  158      
+
+  170      log to console    clicking submit
+  171:     SeleniumLibrary.Click Element    xpath=//*[@id='submit']
+  172      sleep  3s
+
+  182      click element    xpath=//*[@href='/login']
+  183:     SeleniumLibrary.Wait Until Element Is Visible    xpath=//*[@id='email']      10s
+  184      log to console    checking if login contains blank
+  185:     #SeleniumLibrary.Element Attribute value should be    xpath=//*[@id='email']    value    ${EMPTY}
+  186      ${pattern}=    Get Value    xpath=//*[@id='email']
+
+  188      log to console    test pass
+  189:     #SeleniumLibrary.Element Text Should Be    xpath=//*[@id='password']
+  190      log to console    checking if company contains blank instead of 71834503 
+  191:     #SeleniumLibrary.Element Attribute Value Should Be    xpath=//*[@id='company-id']    value    ${EMPTY}
+  192      ${pattern}=    Get Value    xpath=//*[@id='company-id']
+
+test_automation/Web_App_Restaurant_Personnel/Login/5.1.7_Logout.robot:
+  2  Default tags      logout
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Login/openclose.robot:
+  2  default tags    open
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.6.1.1_fv_menu_settings_menu_creation_help.robot:
+  2  Default tags      fvmenuhelp
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.6.1.2_fv_menu_settings_menu_category.robot:
+  2  Default Tags      fvmenu_menu
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.6.1.3._fv_menu_settings_menu_sub_category_food.robot:
+    2  Default Tags      fvmenu_subcategoryfood
+    3: Library           SeleniumLibrary
+    4  Resource          ../Resource/dropdownlist.robot
+
+  182  # Scroll_element_into_view_footer
+  183:     # SeleniumLibrary.Scroll Element Into View    xpath=//*[@href="${IKABIT_PRIVACY_POLICY_URL}"]
+  184  verify_footer_text
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.6.1.4_fv_menu_settings_menu_subcategory_alcoholic_beverages.robot:
+    2  Default Tags      fvmenu_alc_bvg
+    3: Library           SeleniumLibrary
+    4  Resource          ../Resource/dropdownlist.robot
+
+  132  Bvg_description1_text_spacebefore
+  133:      SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc1"]    ${SPACE}text
+  134       ${d}    Get Text    xpath=//*[@id="alBvDesc1"]
+
+  139      #4_1_1_12_text_spaceafter	alBvDesc1
+  140:     SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc1"]    text${SPACE}
+  141      ${d}    Get Text    xpath=//*[@id="alBvDesc1"]
+
+  174      #4_1_1_11_text_spacebefore       alBvDesc2
+  175:      SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc2"]    ${SPACE}text
+  176      ${d}    Get Text    xpath=//*[@id="alBvDesc2"]
+
+  181      #4_1_1_12_text_spaceafter	alBvDesc2
+  182:      SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc2"]    text${SPACE}
+  183      ${d}    Get Text    xpath=//*[@id="alBvDesc2"]
+
+  324  Scroll_element_into_view_footer
+  325:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@href="${IKABIT_PRIVACY_POLICY_URL}"]
+  326      Scroll Element Into View     xpath=//*[@id="footer-divider"]
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.6.1.5_fv_menu_settings_menu_subcategory_nonalcoholic_beverages.robot:
+    2  Default Tags      fvmenu_nonalc_bvg
+    3: Library           SeleniumLibrary
+    4  Resource          ../Resource/dropdownlist.robot
+
+  131  Bvg_description1_text_spacebefore 
+  132:      SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc1"]    ${SPACE}text
+  133       ${d}    Get Text    xpath=//*[@id="alBvDesc1"]
+
+  139      #4_1_1_12_text_spaceafter	alBvDesc1
+  140:     SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc1"]    text${SPACE}
+  141      ${d}    Get Text    xpath=//*[@id="alBvDesc1"]
+
+  174      #4_1_1_11_text_spacebefore       alBvDesc2
+  175:     SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc2"]    ${SPACE}text
+  176      ${d}    Get Text    xpath=//*[@id="alBvDesc2"]
+
+  182      #4_1_1_12_text_spaceafter	alBvDesc2
+  183:      SeleniumLibrary.Input Text    xpath=//*[@id="alBvDesc2"]    text${SPACE}
+  184      ${d}    Get Text    xpath=//*[@id="alBvDesc2"]
+
+  327  Scroll_element_into_view_footer
+  328:     #SeleniumLibrary.Scroll Element Into View    xpath=//*[@href="${IKABIT_PRIVACY_POLICY_URL}"]
+  329      Scroll Element Into View     xpath=//*[@id="footer-divider"]
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.7.1.1_fv_menu_settings_menu_items_lets_add_to_menu.robot:
+  2  Default tags      fv_addmenuitem_letsaddtomenu
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.7.1.2_ fv_menu_settings_view_all_menu_items.robot:
+  2  Default tags      fvviewallmenuitems
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.7.1.3_fv_menu_settings_menu_items_view_and_edit_menu.robot:
+  2  Default Tags      fvvieweditmenu
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/4.7.1.4_fv_submission_confimation:
+  2  Default tags      fv_addmenuitem_letsaddtomenu
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.4.1_Menu_Settings_Menu_Creation_Help.robot:
+  2  Default Tags      menuhelp
+  3: Library           SeleniumLibrary
+  4  #Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.4.2_Menu_Settings_Menu_Categories_NotRequired.robot:
+  2  Default Tags      menucategory
+  3: Library           SeleniumLibrary
+  4  Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.4.2_Menu_Settings_Menu_Categories.robot:
+  10  Default Tags      menucategory
+  11: Library           SeleniumLibrary
+  12  Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.5.1_Menu_Settings_Menu_Sub-Category_Food.robot:
+    2  Default Tags      menusubcatfood
+    3: Library           SeleniumLibrary
+    4  Library            FakerLibrary
+
+   69      #log to console    entering password...................Test@123
+   70:     #SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+   71      #log to console    clicking submit
+   72:     #SeleniumLibrary.Click Button    xpath=//*[@id='submit']
+   73      login pkg1
+
+  238      #log to console    entering password...................Test@123
+  239:     #SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+  240      #log to console    clicking submit
+  241:     #SeleniumLibrary.Click Button    xpath=//*[@id='submit']
+  242      Wait Until Element Is Visible   xpath=//*[@href="/user/menu-settings"]
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.5.2_Menu_Settings_Menu_Sub-Category_Alcoholics_Beverages_ToGo.robot:
+  2  Default Tags      menualcoholicbvg
+  3: Library           SeleniumLibrary
+  4  #Library            AutoItLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.5.3_Menu_Settings_Menu Sub-Category_Non-Alcoholic_Beverages_ToGo.robot:
+    2  Default Tags      menunonalcbvg
+    3: Library           SeleniumLibrary
+    4  Resource          ../Resource/genericfunctions.robot
+
+  279      log to console    entering password...................Test@123
+  280:     SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+  281      log to console    clicking submit
+  282:     SeleniumLibrary.Click Button    xpath=//*[@id='submit']
+  283      Wait Until Element Is Visible   xpath=//*[@href="/user/menu-settings"]
+
+  316      log to console    entering password...................Test@123
+  317:     SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+  318      log to console    clicking submit
+  319:     SeleniumLibrary.Click Button    xpath=//*[@id='submit']
+  320      Wait Until Element Is Visible   xpath=//*[@href="/user/menu-settings"]
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.6.1_Menu_Settings_Lets_Add_To_Your_Menu.robot:
+  2  Default Tags      menugtm
+  3: Library           SeleniumLibrary
+  4  Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.6.1.1and12_Menu_Settings_Lets_Add_To_Your_Menu.robot:
+  3  Default Tags      letsaddtomenu
+  4: Library           SeleniumLibrary
+  5  Library            OperatingSystem     
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.6.2_Menu_Settings_View_Edit_Menu.robot:
+   2  Default Tags      vieweditmenu
+   3: #Library           SeleniumLibrary
+   4  #Library           String
+
+  16  #Resource          ../Resource/genericfunctions.robot
+  17: Library           SeleniumLibrary
+  18  Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Menu/5.10.1.3and4_leftmenu_test_navigation_menusettings_null:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/AlcoholicBvg_Add_temp.robot:
+  2  #Default Tags      menualcoholicbvg
+  3: Library           SeleniumLibrary
+  4  #Library            AutoItLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Menu/DKL_Alcoholic_Beverages_to_go:
+   2  Default Tags      menunonalcbvg
+   3: Library           SeleniumLibrary
+   4  Resource         Resources/generalfunction.robot
+
+  25      log to console    entering login............ grapp32.user@outlook.com
+  26:     SeleniumLibrary.Input Text    xpath=//*[@id='email']    grapp32.user@outlook.com
+  27      log to console    entering password...................Test@123
+  28:     SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+  29      log to console    entering restaurant id.........................30084103
+  30:     SeleniumLibrary.Input Text    xpath=//input[@id="company-id"]    30084103
+  31      log to console    clicking submit
+  32:     SeleniumLibrary.Click Button    xpath=//*[@id='submit']
+  33      Wait Until Element Is Visible   xpath=//*[@href="/user/menu-settings"]
+
+test_automation/Web_App_Restaurant_Personnel/Menu/DKL_Food:
+  2  Default Tags      menunonalcbvg
+  3: Library           SeleniumLibrary
+  4  Resource         Resources/generalfunction.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/ListBox.robot:
+  2  Default Tags      listbox
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Menu/temp_debug:
+  2  Default tags      debug
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Resource/Email ID.robot:
+    1  *** Settings ***
+    2: Library   SeleniumLibrary
+    3  #Library    FakerLibrary    locale=en_US
+
+   31      [Arguments]    ${id}
+   32:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]  
+   33:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 user@xyz
+   34      log to console    testing with text..........user@xyz
+   35      Clear Element text    xpath=//*[@id="${id}"]
+   36:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 user.com
+   37      log to console    testing with text..........user.com
+   38      Clear Element text    xpath=//*[@id="${id}"]
+   39:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 Onlytext
+   40      log to console    testing with text..........Onlytext
+   41      Clear Element text    xpath=//*[@id="${id}"]
+   42:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example.com
+   43      log to console    testing with text..........example.com
+   44      Clear Element text    xpath=//*[@id="${id}"]
+   45:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 A@b@c@domain.com
+   46      log to console    testing with text..........A@b@c@domain.com
+   47      Clear Element text    xpath=//*[@id="${id}"]
+   48:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 .test@domain.com
+   49      log to console    testing with text...........test@domain.com
+   50      Clear Element text    xpath=//*[@id="${id}"]
+   51:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@domain.com
+   52      log to console    testing with text..........test@domain.com
+   53      Clear Element text    xpath=//*[@id="${id}"]
+   54:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@domain.com
+   55      log to console    testing with text..........test@domain.com
+   56      Clear Element text    xpath=//*[@id="${id}"]
+   57:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example@-domain.com
+   58      log to console    testing with text..........example@-domain.com
+   59      Clear Element text    xpath=//*[@id="${id}"]
+   60:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abctestemail@domain.com
+   61      log to console    testing with text..........mail@domain.com
+   62      Clear Element text    xpath=//*[@id="${id}"]
+   63:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abc isnot\valid@domain.com
+   64      log to console    testing with text..........abc isnot\valid@domain.com
+   65      Clear Element text    xpath=//*[@id="${id}"]
+   66:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@[IPv6:2018:db8::1]
+   67      log to console    testing with text..........test@[IPv6:2018:db8::1]
+   68      Clear Element text    xpath=//*[@id="${id}"]
+   69:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 abc\ is\not\valid@domain.com
+   70      log to console    testing with text..........abc\ is\not\valid@domain.com
+
+   75      [Arguments]    ${id}
+   76:     SeleniumLibrary.Scroll element into view	xpath=//*[@id="${id}"]
+   77:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 User1@test.netname@gmail.com
+   78      log to console    testing with text...........User1@test.netname@gmail.com
+   79      Clear Element text    xpath=//*[@id="${id}"]
+   80:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 my@m.co.in
+   81      log to console    testing with text...........my@m.co.in
+   82      Clear Element text    xpath=//*[@id="${id}"]
+   83:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 Test123@Domain
+   84      log to console    testing with text...........Test123@Domain
+   85      Clear Element text    xpath=//*[@id="${id}"]
+   86:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 a@domain.com
+   87      log to console    testing with text...........a@domain.com
+   88      Clear Element text    xpath=//*[@id="${id}"]
+   89:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 @domain.org
+   90      log to console    testing with text...........domain.org
+   91      Clear Element text    xpath=//*[@id="${id}"]
+   92:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 .test"@strange.domain.com
+   93      log to console    testing with text...........""email\".test"@strange.domain.com
+   94      Clear Element text    xpath=//*[@id="${id}"]
+   95:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 a@domain.org
+   96      log to console    testing with text............a@domain.org
+   97      Clear Element text    xpath=//*[@id="${id}"]
+   98:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 admin@mailserver1
+   99      log to console    testing with text...........admin@mailserver1
+  100      Clear Element text    xpath=//*[@id="${id}"]
+  101:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example@localhost
+  102      log to console    testing with text...........example@localhost
+  103      Clear Element text    xpath=//*[@id="${id}"]
+  104:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 example-abc@abc-domain.com
+  105      log to console    testing with text...........exampleabc@abc-domain.com
+  106      Clear Element text    xpath=//*[@id="${id}"]
+  107:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@com
+  108      log to console    testing with text...........test@com
+  109      Clear Element text    xpath=//*[@id="${id}"]
+  110:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@localserver
+  111      log to console    testing with text...........test@localserver
+  112      Clear Element text    xpath=//*[@id="${id}"]
+  113:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 test@[IPv6:2018:db8::1]
+  114      log to console    testing with text...........test@[IPv6:2018:db8::1]
+  115      Clear Element text    xpath=//*[@id="${id}"]
+  116:     SeleniumLibrary.Input text		xpath=//*[@id="${id}"]		 xyz@example.com
+  117      log to console    testing with text...........xyz@example.com
+
+test_automation/Web_App_Restaurant_Personnel/Resource/File Upload.robot:
+  1  *** Settings ***
+  2: Library    SeleniumLibrary
+  3  
+
+test_automation/Web_App_Restaurant_Personnel/Resource/TEST_prototype.robot:
+  2  Default tags      fvmenuhelp
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/dropdownlist.robot
+
+test_automation/Web_App_Restaurant_Personnel/Resource/Text on form.robot:
+  1  *** Settings ***
+  2: Library   SeleniumLibrary
+  3  #Library    FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/4.5.1.1_fv_restaurant_info_account_info.robot:
+  2  Default Tags        fvrestacc
+  3: Library            SeleniumLibrary
+  4  Library            String
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/4.5.1.2_fv_restaurant_info_logo_tagline.robot:
+  2  Default Tags      fvrestlogo
+  3: Library           SeleniumLibrary
+  4  Library            AutoItLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/4.5.1.3_fv_restaurant_info_policies_and_payments.robot:
+    2  Default Tags      fvrestinfo_policy_pymt
+    3: Library           SeleniumLibrary
+    4  Library            AutoItLibrary
+
+   26  Enter_time_ddl_selectbylabel
+   27:     SeleniumLibrary.Select From List By Label   xpath=//select[@id="beforePickUpTime"]    30 Minutes
+   28  ScrollDown
+
+  309  Enter_time_ddl_selectbylabel
+  310:     SeleniumLibrary.Select From List By Label   xpath=//select[@id="beforePickUpTime"]    30 Minutes
+  311  Donotrun
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/4.5.1.4_fv_restaurant_info_calendar_settings.robot:
+  2  Default Tags    fvcalendar
+  3: Library    SeleniumLibrary
+  4  Library    String
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/4.9.1.1_fv_restaurant_info_create_a_promo_code.robot:
+  2  Default Tags      fvcreatepromocode
+  3: Library           SeleniumLibrary
+  4  Library           AutoItLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/4.9.1.2_fv_restaurant_info_promocode_list.robot:
+  2  Default Tags       fvpromocodelist
+  3: Library           SeleniumLibrary
+  4  Library            AutoItLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.1.1_2_3_Restaurant_Info_Account_Info.robot:
+    2  Default Tags      accountinfo
+    3: Library           SeleniumLibrary
+    4  #Library            FakerLibrary    
+
+  308      log to console  restaurant name as clear
+  309:     #SeleniumLibrary.Input Text    xpath=//input[@id="text-restaurant-name"]    ${empty}
+  310      log to console    selecting default cuisine------------American (default)
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.1.4_5_6_Restaurant_Info_Account_Info.robot:
+  2  Default Tags      accountinfo2
+  3: Library           SeleniumLibrary
+  4  Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.2_Restaurant_Info_Logo_and_Tagline.robot:
+  2  Default Tags      logotagline
+  3: Library           SeleniumLibrary
+  4  #Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.3_Restaurant_Info_Policy_Payments.robot:
+  2  Default Tags      policy
+  3: Library           SeleniumLibrary
+  4  #Library            FakerLibrary
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.4.1_2_Restaurant_Info_Promocodes_CreateNew_Disable.robot:
+  2  Default Tags      promocode
+  3: Library           SeleniumLibrary
+  4  Library           String
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.4.3_Restaurant_Info_Promocodes_Missing_Mandatory_Fields.robot:
+  2  Default Tags      promocode2
+  3: Library           SeleniumLibrary
+  4  Library           String
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.4.4_Restaurant_Info_Promocodes_Edit.robot:
+  2  Default Tags      promocode3
+  3: Library           SeleniumLibrary
+  4  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.3.5_Restaurant_Info_Calendar_Settings.robot:
+  2  Default Tags      calendar
+  3: Library           SeleniumLibrary
+  4  Library           DateTime
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/5.10.1.1and2_leftmenu_test_navigation_restinfo:
+  1  *** Settings ***
+  2: Library           SeleniumLibrary
+  3  Resource          ../Resource/genericfunctions.robot
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/tempcalendar_debug.robot:
+  2  #Default Tags    
+  3: Library    SeleniumLibrary
+  4  Library    String
+
+test_automation/Web_App_Restaurant_Personnel/Restaurant_Info/zzzzz.robot:
+   2  Default Tags        main
+   3: Library           SeleniumLibrary
+   4  #Resource          ../Resource/genericfunctions.robot
+
+  62      #Set Browser Implicit wait    2
+  63:     #    SeleniumLibrary.Input Text  xpath=//input[@id="loginID"]    consultant2@ikabit.com
+  64:     SeleniumLibrary.Input Text  xpath=//input[@id="email"]    manohar.an@ikabit.com
+  65      #abhinn.p@ikabit.com
+  66:      SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Abcd@1234
+  67       #test123A
+  68:     #    SeleniumLibrary.Input Text  xpath=//input[@id="password"]     Test12@34
+  69:     SeleniumLibrary.Input Text  xpath=//input[@id="company-id"]     4019527193
+  70      #99115109115
+
+test_automation/Web_App_Restaurant_Personnel/SignUp/5.2_SignUpManualTests.robot:
+  2  #Default Tags      signupmanualtests
+  3: Library           SeleniumLibrary
+  4  Library           FakerLibrary    locale=en_US
+
+test_automation/Web_App_Restaurant_Personnel/SignUp/5.2.1_SignUp.robot:
+  2  Default Tags      signup12
+  3: Library           SeleniumLibrary
+  4  Library           FakerLibrary    locale=en_US

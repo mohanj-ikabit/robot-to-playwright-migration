@@ -1,0 +1,25 @@
+** Settings ***
+Default Tags      dashboard
+Library           SeleniumLibrary
+Resource          ../Resource/genericfunctions.robot
+Suite Teardown    Close all browsers
+
+*** Variables ***
+${ACCOUNT_SETTINGS_URL}     https://verify-getrestaurantapp-v1-0-0.d3bydizwdiwzbp.amplifyapp.com/user/account-settings
+
+*** Test Cases ***
+4.13.3.1_fv_check_topseller
+    login pkg1
+    Wait Until Element Is Visible        xpath=//*[@href="/user/dashboard"]    
+    Page Should Contain         Image
+    Page Should Contain Element    Dishnam2
+    Page Should Contain Element    no of unit sold  
+    
+4.13.3.2_fv_check_forward_backward_sign
+    Click Element     xpath=//*[@class="slick-arrow slick-prev"]  
+    Click Element     xpath=//*[@class="slick-arrow slick-next"] 
+
+    
+
+    
+    

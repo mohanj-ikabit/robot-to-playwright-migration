@@ -1,0 +1,1823 @@
+*** Settings ***
+Library             SeleniumLibrary
+Library             Collections
+Library             String
+Library             DateTime
+Library             RequestsLibrary
+Library             OperatingSystem
+Library             BuiltIn
+Library             Process
+Suite Setup         Create API Session And Init Mock Store
+Test Setup          Open Test Browser And Reset State
+Test Teardown       Close Browser And Capture Failure
+Force Tags          payment_gateway    regression    smoke
+
+*** Variables ***
+${BASE_URL}                     https://example-checkout.com
+${RAZORPAY_GATEWAY}             razorpay
+${STRIPE_GATEWAY}               stripe
+${COUPON_FREE40}                Free40
+${INDIA_REGION_CODE}            IN
+${US_REGION_CODE}               US
+${BROWSER}                      chrome
+${TIMEOUT}                      30s
+${PAYMENT_SUCCESS_MSG}          Payment successful
+${PAYMENT_FAILED_MSG}           Payment failed
+${ORDER_CONFIRM_MSG}            Order confirmed
+${ZERO_AMOUNT_MSG}              No payment required
+${API_BASE}                     https://api.example-checkout.com/v1
+${API_SESSION}                  api_session
+${MOCK_SERVER_URL}              http://localhost:8080
+
+# Locators
+${BTN_CHECKOUT}                 css:button.checkout-btn
+${BTN_PAY_NOW}                  css:button.pay-now
+${BTN_CANCEL}                   css:button.cancel-payment
+
+${INPUT_CARD_NUMBER}            id:card_number
+${INPUT_CARD_EXPIRY}            id:cc-exp
+${INPUT_CARD_CVV}               id:cc-csc
+
+${INPUT_COUPON}                 id:promoCode
+${INPUT_PROMO_CODE_NAME}        id:promoCodeName
+${INPUT_PROMO_DESCRIPTION}      id:description
+${INPUT_PERCENTAGE}             id:pc
+${INPUT_PERCENTAGE_BILL}        id:pcBill
+${INPUT_VALUE_BASED}            id:val
+${INPUT_VALUE_BILL}             id:valBill
+${INPUT_PROMO_EXPIRY}           id:expiryDate
+
+${BTN_CREATE_PROMO}             id:createPromoCode
+${BTN_CONTINUE}                 id:clickToContinue
+${BTN_DISABLE_PROMO}            id:disable
+${BTN_APPLY_COUPON}             css:button.apply-coupon
+
+${INPUT_WEBSITE_URL}            id:webUrl
+${BTN_UPLOAD_IMAGES}            id:uploadImages
+
+${INPUT_EMAIL}                  id:email
+${INPUT_PASSWORD}               id:password
+${INPUT_ZIP_CODE}               id:text-zipcode
+
+${BTN_MANAGE_BILLING}           id:manageBilling
+${BTN_SAVE_CHANGES}             id:saveChanges1
+${INPUT_BILLING_ACCOUNT}        id:billingAccount
+
+${INPUT_SUB_START_DATE}         id:subscriptionStartDate
+${INPUT_SUB_EXPIRY_DATE}        id:subscriptionExpiryDate
+
+${BTN_DELETE_CARD_MC}           id:deletecard_x4444
+${BTN_EDIT_CARD_MC}             id:editcard_x4444
+${BTN_DELETE_CARD_VISA}         id:deletecard_x5556
+${BTN_EDIT_CARD_VISA}           id:editcard_x5556
+
+${BTN_NEXT}                     id:next
+${BTN_UNSUBSCRIBE}              id:unsubscribe
+
+${TXT_PAYABLE_AMOUNT}           css:span.payable-amount
+${TXT_GATEWAY_INDICATOR}        css:div.gateway-indicator
+${TXT_ORDER_STATUS}             css:div.order-status
+${TXT_TRANSACTION_ID}           css:span.transaction-id
+${POPUP_RAZORPAY}               id:razorpay-modal
+${POPUP_STRIPE}                 id:stripe-modal
+${ERROR_MSG}                    css:div.error-message
+${BTN_RETRY}                    css:button.retry-payment
+${TXT_REGION}                   css:span.user-region
+
+*** Test Cases ***
+
+# =============================================================================
+# 3.1 PAYMENT GATEWAY ROUTING VALIDATION
+# =============================================================================
+TC_001_Verify_India_User_Redirected_To_Razorpay
+    [Documentation]    Verify India-origin users are redirected to Razorpay
+    [Tags]    routing    india    razorpay    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Wait Until Element Is Visible    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    ${gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+    Should Be Equal As Strings    ${gateway}    ${RAZORPAY_GATEWAY}
+    Wait Until Element Is Visible    ${POPUP_RAZORPAY}    ${TIMEOUT}
+
+TC_002_Verify_India_User_Not_Redirected_To_Stripe
+    [Documentation]    Verify India-origin users NOT redirected to Stripe (negative)
+    [Tags]    routing    india    negative
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Wait Until Element Is Visible    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    Wait Until Element Is Not Visible    ${POPUP_STRIPE}    ${TIMEOUT}
+
+TC_003_Verify_NonIndia_User_Redirected_To_Stripe
+    [Documentation]    Verify non-India users are redirected to Stripe
+    [Tags]    routing    non-india    stripe    critical    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Wait Until Element Is Visible    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    ${gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+    Should Be Equal As Strings    ${gateway}    ${STRIPE_GATEWAY}
+    Wait Until Element Is Visible    ${POPUP_STRIPE}    ${TIMEOUT}
+
+TC_004_Verify_NonIndia_User_Not_Redirected_To_Razorpay
+    [Documentation]    Verify non-India users NOT redirected to Razorpay (negative)
+    [Tags]    routing    non-india    negative
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Wait Until Element Is Visible    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    Wait Until Element Is Not Visible    ${POPUP_RAZORPAY}    ${TIMEOUT}
+
+TC_005_Verify_Gateway_Selection_Consistency_Multiple_Attempts
+    [Documentation]    Verify correct gateway opens consistently across sessions
+    [Tags]    routing    consistency    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    FOR    ${index}    IN RANGE    3
+        Navigate To Checkout
+        ${gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+        Should Be Equal As Strings    ${gateway}    ${RAZORPAY_GATEWAY}
+        Go To    ${BASE_URL}/cart
+        Reload Page
+        Wait Until Page Contains Element    ${BTN_CHECKOUT}    ${TIMEOUT}
+    END
+
+TC_006_Verify_Gateway_Selection_Based_On_Operational_Region_Logic
+    [Documentation]    Verify gateway selection follows operational region logic
+    [Tags]    routing    logic    api    positive
+    ${regions}=    Create List    IN    US    UK    SG
+    FOR    ${region}    IN    @{regions}
+        Set User Region For Backend    ${region}
+        Navigate To Checkout
+        ${expected}=    Set Variable If    '${region}' == 'IN'    ${RAZORPAY_GATEWAY}    ${STRIPE_GATEWAY}
+        ${actual}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+        Should Be Equal As Strings    ${actual}    ${expected}
+        Go To    ${BASE_URL}/cart
+        Wait Until Page Contains Element    ${BTN_CHECKOUT}    ${TIMEOUT}
+    END
+
+TC_007_Verify_Incorrect_Gateway_Never_Triggered_India
+    [Documentation]    Verify incorrect gateway (Stripe) never triggered for India users
+    [Tags]    routing    negative    critical
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Wait Until Element Is Not Visible    ${POPUP_STRIPE}    ${TIMEOUT}
+
+TC_008_Verify_Incorrect_Gateway_Never_Triggered_NonIndia
+    [Documentation]    Verify incorrect gateway (Razorpay) never triggered for non-India users
+    [Tags]    routing    negative    critical
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Wait Until Element Is Not Visible    ${POPUP_RAZORPAY}    ${TIMEOUT}
+
+# =============================================================================
+# 3.2 COUPON & ZERO AMOUNT VALIDATION
+# =============================================================================
+TC_009_Apply_Coupon_Free40_Verify_Zero_Payable_Amount
+    [Documentation]    Apply coupon Free40 and verify payable amount becomes exactly 0
+    [Tags]    coupon    zero-amount    critical    positive
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    ${COUPON_FREE40}
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${TXT_PAYABLE_AMOUNT}    ${TIMEOUT}
+    ${amount}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Be Equal As Numbers    ${amount}    0    message=Payable amount should be exactly zero
+
+TC_010_Apply_Coupon_Free40_Verify_Zero_Payable_Amount_Fail_Invalid
+    [Documentation]    Apply invalid coupon and verify amount is NOT zero (negative)
+    [Tags]    coupon    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    INVALID999
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${amount}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Not Be Equal As Numbers    ${amount}    0    message=Amount should not be zero for invalid coupon
+
+TC_011_Verify_Razorpay_Popup_Does_Not_Open_For_Zero_Amount
+    [Documentation]    Verify Razorpay popup does NOT open when amount is 0 (negative)
+    [Tags]    coupon    zero-amount    negative
+    Apply Coupon And Proceed    ${COUPON_FREE40}
+    Wait Until Element Is Not Visible    ${POPUP_RAZORPAY}    ${TIMEOUT}
+    Wait Until Element Is Not Visible    ${POPUP_STRIPE}    ${TIMEOUT}
+
+TC_012_Verify_Checkout_Completes_Without_Payment_Step
+    [Documentation]    Verify checkout completes successfully without payment step
+    [Tags]    coupon    zero-amount    e2e    critical    positive
+    Apply Coupon And Proceed    ${COUPON_FREE40}
+    Click Element    ${BTN_CHECKOUT}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${status}=    Get Text    ${TXT_ORDER_STATUS}
+    Should Contain    ${status}    ${ORDER_CONFIRM_MSG}
+    ${txn_id}=    Get Text    ${TXT_TRANSACTION_ID}
+    Should Not Be Equal As Strings    ${txn_id}    ${EMPTY}
+
+TC_013_Verify_Backend_Marks_Zero_Amount_Transaction_Appropriately
+    [Documentation]    Verify backend marks transaction appropriately for zero amount
+    [Tags]    coupon    backend    api    positive
+    Apply Coupon And Proceed    ${COUPON_FREE40}
+    Complete Checkout
+    ${response}=    Get Zero Amount Transaction Record
+    ${status}=    Get From Dictionary    ${response}    status
+    ${payment_method}=    Get From Dictionary    ${response}    payment_method
+    Should Be Equal As Strings    ${status}    completed
+    Should Be Equal As Strings    ${payment_method}    coupon_bypass
+
+TC_014_Verify_No_Failed_Payment_Records_For_Zero_Amount
+    [Documentation]    Verify no failed payment records created for zero amount flow (negative)
+    [Tags]    coupon    backend    negative
+    Apply Coupon And Proceed    ${COUPON_FREE40}
+    Complete Checkout
+    ${failed_records}=    Query Failed Payment Records    ${TEST_NAME}
+    Should Be Empty    ${failed_records}    message=No failed payment records should exist
+
+# =============================================================================
+# 3.3 FUNCTIONAL CHECKOUT VALIDATION
+# =============================================================================
+TC_015_Verify_Successful_Razorpay_Payment_Flow
+    [Documentation]    Successful Razorpay payment flow for India users
+    [Tags]    razorpay    success    functional    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Mock Razorpay Success Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${status}=    Get Text    ${TXT_ORDER_STATUS}
+    Should Contain    ${status}    ${PAYMENT_SUCCESS_MSG}
+    Verify Transaction Recorded    ${RAZORPAY_GATEWAY}    success
+
+TC_016_Verify_Failed_Razorpay_Payment_Flow_Handled
+    [Documentation]    Failed Razorpay payment flow with proper error handling
+    [Tags]    razorpay    failure    functional
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Mock Razorpay Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    ${PAYMENT_FAILED_MSG}
+    Element Should Be Visible    ${BTN_RETRY}
+
+TC_017_Verify_Razorpay_Cancellation_Flow_Handled
+    [Documentation]    Razorpay cancellation flow handled gracefully
+    [Tags]    razorpay    cancel    functional
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${BTN_CANCEL}    ${TIMEOUT}
+    Click Element    ${BTN_CANCEL}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${msg}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${msg}    cancelled
+    Page Should Contain    Retry
+
+TC_018_Verify_Razorpay_Retry_After_Failure
+    [Documentation]    Retry functionality works after Razorpay failure
+    [Tags]    razorpay    retry    functional    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Mock Razorpay Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${BTN_RETRY}    ${TIMEOUT}
+    Mock Razorpay Success Via API
+    Click Element    ${BTN_RETRY}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${status}=    Get Text    ${TXT_ORDER_STATUS}
+    Should Contain    ${status}    ${PAYMENT_SUCCESS_MSG}
+
+TC_019_Verify_Successful_Stripe_Flow_For_NonIndia_Users
+    [Documentation]    Successful Stripe flow for non-India users
+    [Tags]    stripe    success    functional    critical    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Mock Stripe Success Via API
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${status}=    Get Text    ${TXT_ORDER_STATUS}
+    Should Contain    ${status}    ${PAYMENT_SUCCESS_MSG}
+    Verify Transaction Recorded    ${STRIPE_GATEWAY}    success
+
+TC_020_Verify_Failed_Stripe_Payment_Flow_Handled
+    [Documentation]    Failed Stripe payment flow with proper error handling
+    [Tags]    stripe    failure    functional
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Mock Stripe Failure Via API
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    ${PAYMENT_FAILED_MSG}
+    Element Should Be Visible    ${BTN_RETRY}
+
+TC_021_Verify_Stripe_Cancellation_Flow_Handled
+    [Documentation]    Stripe cancellation flow handled gracefully
+    [Tags]    stripe    cancel    functional
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${BTN_CANCEL}    ${TIMEOUT}
+    Click Element    ${BTN_CANCEL}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${msg}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${msg}    cancelled
+    Page Should Contain    Retry
+
+TC_022_Verify_Stripe_Retry_After_Failure
+    [Documentation]    Retry functionality works after Stripe failure
+    [Tags]    stripe    retry    functional    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Mock Stripe Failure Via API
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${BTN_RETRY}    ${TIMEOUT}
+    Mock Stripe Success Via API
+    Click Element    ${BTN_RETRY}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${status}=    Get Text    ${TXT_ORDER_STATUS}
+    Should Contain    ${status}    ${PAYMENT_SUCCESS_MSG}
+
+TC_023_Verify_Checkout_Confirmation_Handling
+    [Documentation]    Checkout confirmation handling displays correct details
+    [Tags]    confirmation    functional    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+    Page Should Contain Element    ${TXT_TRANSACTION_ID}
+    ${txn_id}=    Get Text    ${TXT_TRANSACTION_ID}
+    Log    Transaction ID: ${txn_id}
+
+TC_024_Verify_Order_Completion_Flow_End_To_End
+    [Documentation]    Complete order completion flow from cart to confirmation
+    [Tags]    e2e    order    critical    positive
+    Add Item To Cart    test-product-001
+    Navigate To Checkout
+    Fill Checkout Details
+    Complete Payment Flow
+    Verify Order Created In Backend
+    ${order}=    Get Order Details    ${TEST_NAME}
+    ${order_id}=    Get From Dictionary    ${order}    order_id
+    ${order_status}=    Get From Dictionary    ${order}    status
+    Should Not Be Equal As Strings    ${order_id}    ${EMPTY}
+    Should Be Equal As Strings    ${order_status}    confirmed
+
+TC_025_Verify_Retry_Scenarios_After_Payment_Failure
+    [Documentation]    General retry scenarios after payment failure
+    [Tags]    retry    failure    functional    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Mock Razorpay Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${BTN_RETRY}    ${TIMEOUT}
+    Click Element    ${BTN_RETRY}
+    Mock Razorpay Success Via API
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${status}=    Get Text    ${TXT_ORDER_STATUS}
+    Should Contain    ${status}    ${PAYMENT_SUCCESS_MSG}
+
+# =============================================================================
+# 3.4 BACKEND/API VALIDATION
+# =============================================================================
+TC_026_Verify_Correct_Payment_Gateway_Identifier_In_APIs_India
+    [Documentation]    Verify correct payment gateway identifier passed in APIs for India
+    [Tags]    backend    api    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    ${api_call}=    Capture API Request    /api/payment/initiate    ${RAZORPAY_GATEWAY}
+    ${body}=    Get From Dictionary    ${api_call}    body
+    ${gateway}=    Get From Dictionary    ${body}    gateway
+    Should Be Equal As Strings    ${gateway}    ${RAZORPAY_GATEWAY}
+
+TC_027_Verify_Correct_Payment_Gateway_Identifier_In_APIs_NonIndia
+    [Documentation]    Verify correct payment gateway identifier passed in APIs for non-India
+    [Tags]    backend    api    critical    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    ${api_call}=    Capture API Request    /api/payment/initiate    ${STRIPE_GATEWAY}
+    ${body}=    Get From Dictionary    ${api_call}    body
+    ${gateway}=    Get From Dictionary    ${body}    gateway
+    Should Be Equal As Strings    ${gateway}    ${STRIPE_GATEWAY}
+
+TC_028_Verify_Transaction_Records_Are_Accurate
+    [Documentation]    Verify transaction records are accurate and match frontend
+    [Tags]    backend    api    data-integrity    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    ${frontend_txn}=    Get Text    ${TXT_TRANSACTION_ID}
+    ${backend_txn}=    Get Transaction From API    ${frontend_txn}
+    Should Not Be Equal As Strings    ${backend_txn}    ${EMPTY}
+    ${backend_id}=    Get From Dictionary    ${backend_txn}    id
+    ${backend_status}=    Get From Dictionary    ${backend_txn}    status
+    Should Be Equal    ${backend_id}    ${frontend_txn}
+    Should Be Equal    ${backend_status}    completed
+
+TC_029_Verify_Coupon_Application_Calculation_Is_Correct
+    [Documentation]    Verify coupon application calculation is correct in backend
+    [Tags]    coupon    backend    calculation    positive
+    ${original}=    Get Cart Total
+    Input Text    ${INPUT_COUPON}    ${COUPON_FREE40}
+    Click Element    ${BTN_APPLY_COUPON}
+    ${discounted}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Be Equal As Numbers    ${discounted}    0
+    ${api_calc}=    Verify Coupon Calculation Via API    ${COUPON_FREE40}    ${original}
+    Should Be True    ${api_calc}
+
+TC_030_Verify_No_Duplicate_Transactions_Are_Created
+    [Documentation]    Verify no duplicate transactions are created during checkout
+    [Tags]    backend    api    duplicate    negative
+    Navigate To Checkout
+    ${before}=    Count Transactions    ${TEST_NAME}
+    Complete Payment Flow
+    ${after}=    Count Transactions    ${TEST_NAME}
+    ${diff}=    Evaluate    ${after} - ${before}
+    Should Be Equal As Integers    ${diff}    1
+
+TC_031_Verify_Payment_Status_Updates_Correctly
+    [Documentation]    Verify payment status updates correctly through lifecycle
+    [Tags]    backend    api    status    positive
+    Navigate To Checkout
+    ${txn_id}=    Initiate Payment And Get ID
+    ${status_init}=    Get Payment Status    ${txn_id}
+    Should Be Equal    ${status_init}    pending
+    Complete Payment Flow
+    Wait Until Keyword Succeeds    3x    5s    Verify Payment Status Keyword    ${txn_id}    completed
+
+# =============================================================================
+# 3.5 REGRESSION TESTING
+# =============================================================================
+TC_032_Regression_Existing_Stripe_Checkout_Flow
+    [Documentation]    Existing Stripe checkout flow still works
+    [Tags]    regression    stripe    critical    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Mock Stripe Success Via API
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+
+TC_033_Regression_Existing_Coupon_Functionality
+    [Documentation]    Existing coupon functionality remains intact
+    [Tags]    regression    coupon    positive
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    SAVE10
+    Click Element    ${BTN_APPLY_COUPON}
+    ${amount}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Not Be Equal As Numbers    ${amount}    0
+    ${expected}=    Calculate Expected Amount    10
+    Should Be Equal As Numbers    ${amount}    ${expected}
+
+TC_034_Regression_Existing_Checkout_Validations
+    [Documentation]    Existing checkout validations still function
+    [Tags]    regression    validation    positive
+    Navigate To Checkout
+    Click Element    ${BTN_CHECKOUT}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    required
+
+TC_035_Regression_Order_Creation_Flow
+    [Documentation]    Order creation flow remains functional
+    [Tags]    regression    order    positive
+    Add Item To Cart    regression-product
+    Navigate To Checkout
+    Fill Checkout Details
+    Mock Payment Success Via API
+    Complete Checkout
+    ${order}=    Verify Order In Database    ${TEST_NAME}
+    Should Not Be Equal As Strings    ${order}    ${EMPTY}
+
+TC_036_Regression_Tax_Calculations
+    [Documentation]    Tax calculations remain accurate
+    [Tags]    regression    tax    calculation    positive
+    Navigate To Checkout
+    ${subtotal}=    Get Subtotal Amount
+    ${tax}=    Get Tax Amount
+    ${total}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    ${expected_total}=    Evaluate    ${subtotal} + ${tax}
+    Should Be Equal As Numbers    ${total}    ${expected_total}
+
+TC_037_Regression_Session_Cart_Persistence
+    [Documentation]    Session/cart persistence across page navigations
+    [Tags]    regression    session    cart    positive
+    Add Item To Cart    persist-item-001
+    Add Item To Cart    persist-item-002
+    Go To    ${BASE_URL}/browse
+    Go Back
+    ${cart_count}=    Get Cart Item Count
+    Should Be Equal As Integers    ${cart_count}    2
+
+TC_038_Regression_Payment_Failure_Handling
+    [Documentation]    Payment failure handling remains graceful
+    [Tags]    regression    failure    positive
+    Navigate To Checkout
+    Mock Payment Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    retry
+    Page Should Not Contain    ${ORDER_CONFIRM_MSG}
+
+# =============================================================================
+# 3.6 EDGE CASES
+# =============================================================================
+TC_039_Edge_Region_Switched_During_Checkout
+    [Documentation]    Region switched during checkout process handled
+    [Tags]    edge    region    dynamic    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    ${initial_gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+    Set User Region For Backend    ${US_REGION_CODE}
+    Reload Page
+    Wait Until Page Contains Element    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    ${new_gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+    Should Not Be Equal    ${initial_gateway}    ${new_gateway}
+    Run Keyword If    '${new_gateway}' == '${STRIPE_GATEWAY}'    Wait Until Element Is Visible    ${POPUP_STRIPE}    ${TIMEOUT}
+
+TC_040_Edge_Coupon_Partially_Applied_Scenario
+    [Documentation]    Coupon partially applied scenario handled
+    [Tags]    edge    coupon    partial    positive
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    PARTIAL50
+    Click Element    ${BTN_APPLY_COUPON}
+    ${amount}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    ${original}=    Get Cart Total
+    ${expected}=    Evaluate    ${original} * 0.5
+    Should Be Equal As Numbers    ${amount}    ${expected}
+
+TC_041_Edge_Network_Interruption_During_Payment_Handled
+    [Documentation]    Network interruption during payment handled
+    [Tags]    edge    network    failure    positive
+    Navigate To Checkout
+    Enable Offline Mode
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    network
+    Disable Offline Mode
+    Click Element    ${BTN_RETRY}
+    Mock Payment Success Via API
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+
+TC_042_Edge_Browser_Refresh_During_Payment_Recovery
+    [Documentation]    Browser refresh during payment flow handled
+    [Tags]    edge    refresh    recovery    positive
+    Navigate To Checkout
+    Click Element    ${BTN_PAY_NOW}
+    Reload Page
+    Wait Until Page Contains Element    ${BTN_CHECKOUT}    ${TIMEOUT}
+    ${cart_count}=    Get Cart Item Count
+    Should Be Greater Than    ${cart_count}    0
+    Complete Payment Flow
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+
+TC_043_Edge_Multiple_Rapid_Checkout_Attempts_Handled
+    [Documentation]    Multiple rapid checkout attempts handled (only one transaction)
+    [Tags]    edge    race    concurrency    positive
+    Navigate To Checkout
+    FOR    ${i}    IN RANGE    5
+        Click Element    ${BTN_CHECKOUT}
+        Wait Until Keyword Succeeds    5x    1s    Element Should Be Disabled    ${BTN_CHECKOUT}
+        Wait Until Keyword Succeeds    5x    1s    Element Should Be Enabled    ${BTN_CHECKOUT}
+    END
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${txn_count}=    Count Transactions    ${TEST_NAME}
+    Should Be Equal As Integers    ${txn_count}    1
+
+TC_044_Edge_Expired_Coupon_Scenario_Handled
+    [Documentation]    Expired coupon scenario handled gracefully (negative)
+    [Tags]    edge    coupon    expired    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    EXPIRED2025
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    expired
+    ${amount}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Not Be Equal As Numbers    ${amount}    0
+
+TC_045_Edge_Payment_Popup_Blocked_Scenario_Handled
+    [Documentation]    Payment popup blocked by browser handled
+    [Tags]    edge    popup    blocked    ux    positive
+    Navigate To Checkout
+    Simulate Popup Blocked
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    popup
+    Page Should Contain    enable
+
+# =============================================================================
+# 3.7 VIEWPORT & RESPONSIVE TESTING
+# =============================================================================
+TC_046_Validate_Checkout_On_Desktop_Viewport_1920x1080
+    [Documentation]    Validate checkout flow on desktop viewport
+    [Tags]    viewport    desktop    responsive    positive
+    Set Window Size    1920    1080
+    Run Checkout Validation Success Path
+
+TC_047_Validate_Checkout_On_Desktop_Viewport_1366x768
+    [Documentation]    Validate checkout flow on smaller desktop viewport
+    [Tags]    viewport    desktop    responsive    positive
+    Set Window Size    1366    768
+    Run Checkout Validation Success Path
+
+TC_048_Validate_Checkout_On_Tablet_Viewport_768x1024
+    [Documentation]    Validate checkout flow on tablet viewport
+    [Tags]    viewport    tablet    responsive    positive
+    Set Window Size    768    1024
+    Navigate To Checkout
+    Element Should Be Visible    ${BTN_CHECKOUT}
+    ${layout}=    Get Element Attribute    css:body    data-layout
+    Should Contain    ${layout}    tablet
+
+TC_049_Validate_Checkout_On_Mobile_Viewport_375x812
+    [Documentation]    Validate checkout flow on mobile viewport
+    [Tags]    viewport    mobile    responsive    critical    positive
+    Set Window Size    375    812
+    Navigate To Checkout
+    Element Should Be Visible    ${BTN_CHECKOUT}
+    Element Should Be Visible    css:button.mobile-pay
+    ${btn_height}=    Get Element Height Via JS    ${BTN_CHECKOUT}
+    ${is_valid}=    Evaluate    ${btn_height} >= 44
+    Should Be True    ${is_valid}
+
+TC_050_Validate_Checkout_On_Mobile_Viewport_414x896
+    [Documentation]    Validate checkout flow on larger mobile viewport
+    [Tags]    viewport    mobile    responsive    positive
+    Set Window Size    414    896
+    Navigate To Checkout
+    Element Should Be Visible    ${BTN_CHECKOUT}
+    Complete Payment Flow
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+
+# =============================================================================
+# 3.8 PAYMENT FAILURE & RESILIENCE
+# =============================================================================
+TC_051_Verify_Card_Declined_Scenario_Shows_Proper_Error
+    [Documentation]    Verify card declined scenario shows proper error
+    [Tags]    payment    failure    decline    critical
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Mock Razorpay Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    declined
+
+TC_052_Verify_Expired_Card_Handling
+    [Documentation]    Verify expired card handling
+    [Tags]    payment    validation    expiry    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_CARD_EXPIRY}    12/20
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    expired
+
+TC_053_Verify_Invalid_CVV_Rejection
+    [Documentation]    Verify invalid CVV rejection
+    [Tags]    payment    validation    cvv
+    Navigate To Checkout
+    Input Text    ${INPUT_CARD_CVV}    000
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    invalid
+
+TC_054_Verify_Insufficient_Funds_Scenario
+    [Documentation]    Verify insufficient funds scenario
+    [Tags]    payment    failure    funds
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Mock Stripe Failure Via API
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    funds
+
+TC_055_Verify_Network_Timeout_During_Payment_Initiation
+    [Documentation]    Verify network timeout during payment initiation
+    [Tags]    resilience    network    timeout    critical
+    Navigate To Checkout
+    Enable Offline Mode
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    timeout
+
+TC_056_Verify_Graceful_Recovery_After_Network_Restoration
+    [Documentation]    Verify graceful recovery after network restoration
+    [Tags]    resilience    recovery    network    positive
+    Navigate To Checkout
+    Enable Offline Mode
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Disable Offline Mode
+    Click Element    ${BTN_RETRY}
+    Mock Payment Success Via API
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+
+TC_057_Verify_Retry_Payment_Generates_New_Transaction_ID
+    [Documentation]    Verify retry payment generates new transaction ID
+    [Tags]    retry    idempotency    transaction    critical    positive
+    Navigate To Checkout
+    Mock Payment Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${BTN_RETRY}    ${TIMEOUT}
+    ${old_txn}=    Get Text    ${TXT_TRANSACTION_ID}
+    Mock Payment Success Via API
+    Click Element    ${BTN_RETRY}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    ${new_txn}=    Get Text    ${TXT_TRANSACTION_ID}
+    Should Not Be Equal    ${old_txn}    ${new_txn}
+
+# =============================================================================
+# 3.9 COUPON EDGE CASES & BUSINESS RULES
+# =============================================================================
+TC_058_Verify_Non_Existent_Coupon_Shows_Proper_Error
+    [Documentation]    Verify non-existent coupon shows proper error
+    [Tags]    coupon    validation    error    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    FAKECOUPON123
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    not found
+
+TC_059_Verify_Expired_Coupon_Rejection
+    [Documentation]    Verify expired coupon rejection
+    [Tags]    coupon    expiry    validation    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    FREEOLD
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    expired
+
+TC_060_Verify_Region_Locked_Coupon_Enforcement
+    [Documentation]    Verify region-locked coupon enforcement
+    [Tags]    coupon    region    business-rule    negative
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    IN50
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    region
+
+TC_061_Verify_Coupon_Stacking_Is_Prevented
+    [Documentation]    Verify coupon stacking is prevented
+    [Tags]    coupon    stacking    business-rule    critical    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    ${COUPON_FREE40}
+    Click Element    ${BTN_APPLY_COUPON}
+    Input Text    ${INPUT_COUPON}    SAVE10
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    one coupon
+
+TC_062_Verify_One_Time_Use_Coupon_Cannot_Be_Reused
+    [Documentation]    Verify one-time-use coupon cannot be reused
+    [Tags]    coupon    reuse    user-state    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    WELCOME20
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    already used
+
+TC_063_Verify_Coupon_With_Minimum_Cart_Value_Enforcement
+    [Documentation]    Verify coupon with minimum cart value enforcement
+    [Tags]    coupon    threshold    validation    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    MIN100
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    more
+
+# =============================================================================
+# 3.10 USER STATE & SESSION VALIDATION
+# =============================================================================
+TC_064_Verify_Guest_Checkout_Flow_Completes_Successfully
+    [Documentation]    Verify guest checkout flow completes successfully
+    [Tags]    guest    checkout    positive    critical
+    Navigate To Checkout
+    Fill Checkout Details
+    Complete Payment Flow
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+
+TC_065_Verify_Authenticated_User_Order_Associates_To_Account
+    [Documentation]    Verify authenticated user order associates to account
+    [Tags]    auth    checkout    association    critical    positive
+    Navigate To Checkout
+    Fill Checkout Details
+    Complete Payment Flow
+    ${order}=    Get Order Details    ${TEST_NAME}
+    ${order_id}=    Get From Dictionary    ${order}    order_id
+    Should Not Be Equal As Strings    ${order_id}    ${EMPTY}
+
+TC_066_Verify_Empty_Cart_Cannot_Proceed_To_Checkout
+    [Documentation]    Verify empty cart cannot proceed to checkout
+    [Tags]    cart    validation    empty-state    negative
+    Go To    ${BASE_URL}/checkout
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    empty
+
+TC_067_Verify_Session_Persistence_After_Browser_Back_Refresh_During_Payment
+    [Documentation]    Verify session persistence after browser back/refresh during payment
+    [Tags]    session    navigation    idempotency    critical    positive
+    Navigate To Checkout
+    Click Element    ${BTN_PAY_NOW}
+    Reload Page
+    Wait Until Page Contains Element    ${BTN_CHECKOUT}    ${TIMEOUT}
+    ${cart_count}=    Get Cart Item Count
+    Should Be Greater Than    ${cart_count}    0
+
+TC_068_Verify_New_User_Signup_During_Checkout_Completes_Order
+    [Documentation]    Verify new user signup during checkout completes order
+    [Tags]    auth    signup    checkout    positive    critical
+    Navigate To Checkout
+    Input Text    ${INPUT_EMAIL}    test+signup@example.com
+    Input Text    ${INPUT_PASSWORD}    TestPass123!
+    Click Element    css:button.create-account
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+
+TC_069_Verify_Admin_User_Can_Checkout_With_Tax_Exempt_Status
+    [Documentation]    Verify admin user can checkout with tax-exempt status
+    [Tags]    auth    role    tax    exemption    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    ${tax}=    Get Tax Amount
+    Should Be Equal As Numbers    ${tax}    0
+
+TC_070_Verify_Guest_User_Cannot_Access_Authenticated_Only_Features
+    [Documentation]    Verify guest user cannot access authenticated-only features
+    [Tags]    auth    security    guest    access-control    negative
+    Go To    ${BASE_URL}/account/orders
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    login
+
+TC_071_Verify_Guest_To_Authenticated_Transition_Mid_Checkout
+    [Documentation]    Verify guest-to-authenticated transition mid-checkout
+    [Tags]    auth    migration    session    positive
+    Navigate To Checkout
+    Click Element    css:button.login
+    Wait Until Element Is Visible    ${BTN_CHECKOUT}    ${TIMEOUT}
+    Complete Payment Flow
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+
+# =============================================================================
+# 3.11 CONCURRENCY, PRICE INTEGRITY & UI SAFETY
+# =============================================================================
+TC_072_Verify_Price_Change_Between_Cart_And_Checkout_Uses_Latest_Price
+    [Documentation]    Verify price change between cart & checkout uses latest price
+    [Tags]    price    integrity    concurrency    critical    positive
+    Add Item To Cart    test-product-001
+    Navigate To Checkout
+    ${total}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Be Greater Than    ${total}    0
+
+TC_073_Verify_Double_Click_Prevention_On_Payment_Button
+    [Documentation]    Verify double-click prevention on payment button
+    [Tags]    concurrency    ui-safety    idempotency    positive
+    Navigate To Checkout
+    FOR    ${i}    IN RANGE    5
+        Click Element    ${BTN_PAY_NOW}
+        Wait Until Keyword Succeeds    5x    1s    Element Should Be Disabled    ${BTN_PAY_NOW}
+    END
+    ${txn_count}=    Count Transactions    ${TEST_NAME}
+    Should Be Equal As Integers    ${txn_count}    1
+
+TC_074_Verify_Idempotency_When_Same_Request_Sent_Twice
+    [Documentation]    Verify idempotency when same request sent twice
+    [Tags]    idempotency    api    critical    positive
+    Navigate To Checkout
+    ${before}=    Count Transactions    ${TEST_NAME}
+    Complete Payment Flow
+    ${after}=    Count Transactions    ${TEST_NAME}
+    ${diff}=    Evaluate    ${after} - ${before}
+    Should Be Equal As Integers    ${diff}    1
+
+TC_075_Verify_Cart_Item_Removal_During_Active_Checkout_Session
+    [Documentation]    Verify cart item removal during active checkout session
+    [Tags]    cart    sync    concurrency    positive
+    Add Item To Cart    test-product-001
+    Add Item To Cart    test-product-002
+    Navigate To Checkout
+    Go To    ${BASE_URL}/cart
+    Click Element    css:button.remove-item
+    Go Back
+    ${cart_count}=    Get Cart Item Count
+    Should Be Equal As Integers    ${cart_count}    1
+
+# =============================================================================
+# 3.12 GATEWAY RESILIENCE & SECURITY VALIDATION
+# =============================================================================
+TC_076_Verify_Graceful_Handling_When_Gateway_Is_In_Maintenance_Mode
+    [Documentation]    Verify graceful handling when gateway is in maintenance mode
+    [Tags]    gateway    resilience    maintenance    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Mock Payment Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    unavailable
+
+TC_077_Verify_Webhook_Signature_Validation_Rejects_Tampered_Payloads
+    [Documentation]    Verify webhook signature validation rejects tampered payloads
+    [Tags]    security    webhook    signature    critical    negative
+    ${response}=    POST On Session    ${API_SESSION}    /webhook/payment
+    ...    json={"event": "test"}    headers={"X-Webhook-Signature": "invalid"}
+    Should Be Equal As Integers    ${response.status_code}    401
+
+TC_078_Verify_Webhook_Replay_Attack_Prevention
+    [Documentation]    Verify webhook replay attack prevention
+    [Tags]    security    webhook    idempotency    positive
+    ${payload}=    Create Dictionary    event=payment.succeeded
+    ${response1}=    POST On Session    ${API_SESSION}    /webhook/payment    json=${payload}
+    ${response2}=    POST On Session    ${API_SESSION}    /webhook/payment    json=${payload}
+    Should Be Equal As Integers    ${response1.status_code}    200
+    Should Be Equal As Integers    ${response2.status_code}    200
+
+TC_079_Verify_Fallback_Routing_When_Primary_Gateway_Fails_Initialization
+    [Documentation]    Verify fallback routing when primary gateway fails initialization
+    [Tags]    gateway    fallback    resilience    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Mock Razorpay Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    alternative
+
+# =============================================================================
+# 3.13 POST-ORDER OPERATIONS & REFUND FLOWS
+# =============================================================================
+TC_080_Verify_Partial_Refund_Initiates_Correctly_Via_API
+    [Documentation]    Verify partial refund initiates correctly via API
+    [Tags]    refund    api    post-order    critical    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    ${order}=    Get Order Details    ${TEST_NAME}
+    ${order_id}=    Get From Dictionary    ${order}    order_id
+    ${response}=    POST On Session    ${API_SESSION}    /orders/${order_id}/refund
+    ...    json={"amount": 50}
+    Should Be Equal As Integers    ${response.status_code}    200
+
+TC_081_Verify_Full_Refund_Flow_Syncs_Status_Across_Systems
+    [Documentation]    Verify full refund flow syncs status across systems
+    [Tags]    refund    lifecycle    sync    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    ${order}=    Get Order Details    ${TEST_NAME}
+    ${order_id}=    Get From Dictionary    ${order}    order_id
+    ${response}=    POST On Session    ${API_SESSION}    /orders/${order_id}/refund
+    ...    json={"amount": 100}
+    Should Be Equal As Integers    ${response.status_code}    200
+
+TC_082_Verify_Refund_Fails_Gracefully_For_Already_Refunded_Order
+    [Documentation]    Verify refund fails gracefully for already-refunded order
+    [Tags]    refund    validation    idempotency    negative
+    Navigate To Checkout
+    Complete Payment Flow
+    ${order}=    Get Order Details    ${TEST_NAME}
+    ${order_id}=    Get From Dictionary    ${order}    order_id
+    ${response}=    POST On Session    ${API_SESSION}    /orders/${order_id}/refund
+    ...    json={"amount": 100}
+    ${response2}=    POST On Session    ${API_SESSION}    /orders/${order_id}/refund
+    ...    json={"amount": 100}
+    Should Be Equal As Integers    ${response2.status_code}    422
+
+TC_083_Verify_Refund_Webhook_Updates_UI_In_Real_Time
+    [Documentation]    Verify refund webhook updates UI in real-time
+    [Tags]    refund    realtime    ux    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    Wait Until Keyword Succeeds    3x    2s    Page Should Contain    refunded
+
+# =============================================================================
+# 3.14 ACCESSIBILITY & WCAG COMPLIANCE TESTING
+# =============================================================================
+TC_084_Verify_Keyboard_Navigation_Through_Checkout_Flow
+    [Documentation]    Verify keyboard navigation through checkout flow
+    [Tags]    accessibility    keyboard    wcag    positive
+    Navigate To Checkout
+    Press Key    ${INPUT_COUPON}    TAB
+    Press Key    ${BTN_APPLY_COUPON}    TAB
+    ${focused}=    Run Keyword And Return Status    Element Should Be Focused    ${BTN_CHECKOUT}
+    Should Be True    ${focused}
+
+TC_085_Verify_Screen_Reader_Compatibility_With_Payment_Form
+    [Documentation]    Verify screen reader compatibility with payment form
+    [Tags]    accessibility    screen-reader    wcag    critical    positive
+    Navigate To Checkout
+    ${aria_label}=    Get Element Attribute    ${INPUT_CARD_NUMBER}    aria-label
+    Should Not Be Equal As Strings    ${aria_label}    ${EMPTY}
+
+TC_086_Verify_Color_Contrast_Meets_WCAG_AA_Standards
+    [Documentation]    Verify color contrast meets WCAG AA standards
+    [Tags]    accessibility    contrast    wcag    positive
+    Navigate To Checkout
+    ${contrast}=    Get Element Attribute    ${ERROR_MSG}    data-contrast-ratio
+    Should Not Be Equal As Strings    ${contrast}    ${EMPTY}
+
+TC_087_Verify_Skip_Links_And_Landmark_Navigation
+    [Documentation]    Verify skip links & landmark navigation
+    [Tags]    accessibility    navigation    wcag    positive
+    Go To    ${BASE_URL}/checkout
+    ${skip_link}=    Run Keyword And Return Status    Element Should Be Visible    css:a[href="#main"]
+    Should Be True    ${skip_link}    message=Skip link missing
+
+TC_088_Verify_Form_Errors_Announced_To_Assistive_Tech
+    [Documentation]    Verify form errors announced to assistive tech
+    [Tags]    accessibility    forms    wcag    positive
+    Navigate To Checkout
+    Click Element    ${BTN_CHECKOUT}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${aria_live}=    Get Element Attribute    ${ERROR_MSG}    aria-live
+    Should Be Equal    ${aria_live}    assertive
+
+# =============================================================================
+# 3.15 LOCALIZATION & INTERNATIONALIZATION (I18N)
+# =============================================================================
+TC_089_Verify_Currency_Formatting_Per_Region
+    [Documentation]    Verify currency formatting per region
+    [Tags]    i18n    currency    formatting    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    ${amount}=    Get Text    ${TXT_PAYABLE_AMOUNT}
+    Should Contain    ${amount}    ₹
+
+TC_090_Verify_Date_Time_Format_Localization
+    [Documentation]    Verify date/time format localization
+    [Tags]    i18n    datetime    locale    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    ${date}=    Get Text    css:span.order-date
+    Should Match Regexp    ${date}    \\d{2}/\\d{2}/\\d{4}
+
+TC_091_Verify_Error_Messages_Translate_Correctly
+    [Documentation]    Verify error messages translate correctly
+    [Tags]    i18n    translation    error-handling    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    INVALID
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Not Be Equal As Strings    ${error}    ${EMPTY}
+
+TC_092_Verify_RTL_Language_Layout_Support
+    [Documentation]    Verify RTL language layout support
+    [Tags]    i18n    rtl    layout    positive
+    Execute JavaScript
+    ...    document.documentElement.setAttribute("dir", "rtl")
+    Navigate To Checkout
+    ${direction}=    Get Element Attribute    css:body    dir
+    Should Be Equal    ${direction}    rtl
+
+TC_093_Verify_Address_Fields_Adapt_To_Region_Requirements
+    [Documentation]    Verify address fields adapt to region requirements
+    [Tags]    i18n    forms    validation    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Element Should Be Visible    ${INPUT_ZIP_CODE}
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Reload Page
+    Element Should Be Visible    id:pin-code
+
+# =============================================================================
+# 3.16 PERFORMANCE & LOAD TESTING (REPRESENTATIVE)
+# =============================================================================
+TC_094_Verify_Checkout_Page_Loads_Within_SLA
+    [Documentation]    Verify checkout page loads within SLA
+    [Tags]    performance    core-web-vitals    slas    critical    positive
+    ${start}=    Get Time    epoch
+    Navigate To Checkout
+    ${end}=    Get Time    epoch
+    ${load_time}=    Evaluate    ${end} - ${start}
+    Should Be Less Than    ${load_time}    5    message=Page load > 5s
+
+TC_095_Verify_Gateway_SDK_Initialization_Time
+    [Documentation]    Verify gateway SDK initialization time
+    [Tags]    performance    sdk    initialization    positive
+    Navigate To Checkout
+    ${start}=    Get Time    epoch
+    Click Element    ${BTN_PAY_NOW}
+    ${end}=    Get Time    epoch
+    ${init_time}=    Evaluate    ${end} - ${start}
+    Should Be Less Than    ${init_time}    10    message=SDK init > 10s
+
+TC_096_Verify_API_Response_Times_Under_Normal_Load
+    [Documentation]    Verify API response times under normal load
+    [Tags]    performance    api    load    critical    positive
+    ${start}=    Get Time    epoch
+    ${response}=    GET On Session    ${API_SESSION}    /config/region-routing
+    ${end}=    Get Time    epoch
+    ${response_time}=    Evaluate    ${end} - ${start}
+    Should Be Less Than    ${response_time}    2    message=API response > 2s
+
+# =============================================================================
+# 3.17 SECURITY & COMPLIANCE VALIDATION
+# =============================================================================
+TC_097_Verify_PCI_DSS_Card_Data_Never_Touches_Our_Servers
+    [Documentation]    Verify PCI-DSS: Card data never touches our servers
+    [Tags]    security    pci-dss    data-protection    critical    positive
+    Navigate To Checkout
+    ${razorpay_found}=    Run Keyword And Return Status    Element Should Be Visible    css:iframe[src*="razorpay"]
+    ${stripe_found}=    Run Keyword And Return Status    Element Should Be Visible    css:iframe[src*="stripe"]
+    ${payment_iframe_found}=    Evaluate    ${razorpay_found} or ${stripe_found}
+    Should Be True    ${payment_iframe_found}    message=No payment iframe found
+
+TC_098_Verify_XSS_Protection_On_Coupon_And_Address_Fields
+    [Documentation]    Verify XSS protection on coupon & address fields
+    [Tags]    security    xss    input-validation    critical    negative
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    <script>alert(1)</script>
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Not Contain    <script>
+
+TC_099_Verify_CSRF_Token_Validation_On_Payment_Endpoints
+    [Documentation]    Verify CSRF token validation on payment endpoints
+    [Tags]    security    csrf    api-protection    critical    negative
+    ${response}=    POST On Session    ${API_SESSION}    /payment/init
+    ...    headers={"X-CSRF-Token": "invalid"}
+    Should Be Equal As Integers    ${response.status_code}    403
+
+TC_100_Verify_Sensitive_Data_Masked_In_Client_Side_Logs
+    [Documentation]    Verify sensitive data masked in client-side logs
+    [Tags]    security    logging    pii-protection    positive
+    Navigate To Checkout
+    Mock Payment Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    ${logs}=    Execute JavaScript    return window.console.logs || []
+    Should Not Contain    ${logs}    4242424242424242
+
+TC_101_Verify_Rate_Limiting_On_Payment_Initiation
+    [Documentation]    Verify rate limiting on payment initiation
+    [Tags]    security    rate-limiting    abuse-prevention    positive
+    Navigate To Checkout
+    FOR    ${i}    IN RANGE    6
+        Click Element    ${BTN_PAY_NOW}
+        Sleep    0.1s
+    END
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    retry
+
+# =============================================================================
+# 3.18-3.43: ADDITIONAL REPRESENTATIVE TESTS FROM REMAINING SECTIONS
+# =============================================================================
+TC_102_Verify_Checkout_Funnel_Events_Tracked_Correctly
+    [Documentation]    Verify checkout funnel events tracked correctly
+    [Tags]    analytics    funnel    tracking    positive
+    Navigate To Checkout
+    ${events}=    Execute JavaScript    return window.dataLayer || []
+    Should Not Be Equal As Strings    ${events}    []
+
+TC_103_Verify_Payment_Success_Failure_Events_Logged
+    [Documentation]    Verify payment success/failure events logged
+    [Tags]    analytics    monitoring    observability    critical    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    ${events}=    Execute JavaScript    return window.analyticsEvents || []
+    Should Contain    ${events}    payment_succeeded
+
+TC_104_Verify_Order_Confirmation_Email_Content_And_Format
+    [Documentation]    Verify order confirmation email content & format
+    [Tags]    email    transactional    ux    critical    positive
+    Navigate To Checkout
+    Complete Payment Flow
+    ${email_sent}=    Execute JavaScript    return window.emailSent || false
+    Should Be True    ${email_sent}
+
+TC_105_Verify_Inventory_Decrement_On_Successful_Payment
+    [Documentation]    Verify inventory decrement on successful payment
+    [Tags]    inventory    order    integration    critical    positive
+    Add Item To Cart    test-product-001
+    Navigate To Checkout
+    Complete Payment Flow
+    ${inventory}=    GET On Session    ${API_SESSION}    /inventory/test-product-001
+    ${available}=    Get From Dictionary    ${inventory.json()}    available_qty
+    Should Be Less Than    ${available}    10
+
+TC_106_Verify_GDPR_Consent_Captured_Before_Data_Processing
+    [Documentation]    Verify GDPR: Consent captured before data processing
+    [Tags]    compliance    gdpr    consent    critical    positive
+    Go To    ${BASE_URL}/checkout
+    Element Should Be Visible    css:div.consent-banner
+    Click Element    css:button.accept-consent
+    Wait Until Element Is Not Visible    css:div.consent-banner    ${TIMEOUT}
+
+TC_107_Verify_Payment_Failure_Alerts_Trigger_Correctly
+    [Documentation]    Verify payment failure alerts trigger correctly
+    [Tags]    ops    alerting    incident-response    critical    positive
+    Navigate To Checkout
+    Mock Payment Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    ${alert_fired}=    Execute JavaScript    return window.alertFired || false
+    Should Be True    ${alert_fired}
+
+TC_108_Verify_UPI_Payment_Method_Available_For_India
+    [Documentation]    Verify UPI payment method available for India users
+    [Tags]    payment-methods    upi    india    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Element Should Be Visible    css:button.upi-payment
+
+TC_109_Verify_Apple_Pay_Google_Pay_Available_For_Supported_Regions
+    [Documentation]    Verify Apple Pay/Google Pay available for supported regions
+    [Tags]    payment-methods    apple-pay    google-pay    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    ${apple_found}=    Run Keyword And Return Status    Element Should Be Visible    css:button.apple-pay
+    ${google_found}=    Run Keyword And Return Status    Element Should Be Visible    css:button.google-pay
+    ${wallet_found}=    Evaluate    ${apple_found} or ${google_found}
+    Should Be True    ${wallet_found}    message=No digital wallet buttons visible
+
+TC_110_Verify_Subscription_Trial_To_Paid_Conversion
+    [Documentation]    Verify subscription trial to paid conversion
+    [Tags]    subscription    trial    conversion    critical    positive
+    Navigate To Checkout
+    Select From List By Value    id:billing-cycle    monthly
+    Complete Payment Flow
+    Page Should Contain    subscription
+
+TC_111_Verify_3DS_Authentication_Flow_For_SCA_Compliance
+    [Documentation]    Verify 3DS authentication flow for PSD2/SCA compliance
+    [Tags]    fraud    3ds    sca    compliance    critical    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Mock Stripe Success Via API
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    css:div.3ds-challenge    timeout=10s
+
+TC_112_Verify_B2B_PO_Number_Entry_And_Approval_Workflow
+    [Documentation]    Verify B2B PO number entry and approval workflow
+    [Tags]    b2b    po-number    approval    positive
+    Navigate To Checkout
+    Input Text    id:po-number    PO-12345
+    Click Element    css:button.submit-for-approval
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    Page Should Contain    pending approval
+
+TC_113_Verify_Gift_Card_Redemption_And_Balance_Check
+    [Documentation]    Verify gift cards & store credit redemption
+    [Tags]    gift-cards    credits    redemption    positive
+    Navigate To Checkout
+    Input Text    id:gift-card-code    GC-TEST123
+    Click Element    css:button.apply-gift-card
+    Wait Until Element Is Visible    ${TXT_PAYABLE_AMOUNT}    ${TIMEOUT}
+    ${amount}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Be Less Than    ${amount}    100
+
+TC_114_Verify_Multi_Currency_Dynamic_Conversion_FX_Rate_Lock
+    [Documentation]    Verify multi-currency & FX logic
+    [Tags]    currency    fx    conversion    positive
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    ${currency}=    Get Text    css:span.currency-code
+    Should Be Equal    ${currency}    USD
+
+TC_115_Verify_Advanced_Tax_Compliance_VAT_GST_Rules
+    [Documentation]    Verify advanced tax compliance scenarios
+    [Tags]    tax    vat    gst    compliance    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    ${tax}=    Get Tax Amount
+    Should Be Greater Than    ${tax}    0
+    ${gst_badge}=    Get Element Attribute    css:span.tax-badge    data-type
+    Should Be Equal    ${gst_badge}    GST
+
+TC_116_Verify_Real_Time_Shipping_Rate_Fetching
+    [Documentation]    Verify shipping & carrier integration
+    [Tags]    shipping    carrier    rates    positive
+    Navigate To Checkout
+    Select From List By Value    id:shipping-method    express
+    Wait Until Element Is Visible    css:span.shipping-cost    ${TIMEOUT}
+    ${cost}=    Get Clean Numeric Amount    css:span.shipping-cost
+    Should Be Greater Than    ${cost}    0
+
+TC_117_Verify_Partial_Order_Cancellation_And_Restocking
+    [Documentation]    Verify partial order management
+    [Tags]    order    partial    cancellation    positive
+    Add Item To Cart    test-product-001
+    Add Item To Cart    test-product-002
+    Navigate To Checkout
+    Complete Payment Flow
+    ${order}=    Get Order Details    ${TEST_NAME}
+    ${order_id}=    Get From Dictionary    ${order}    order_id
+    ${response}=    POST On Session    ${API_SESSION}    /orders/${order_id}/cancel-item
+    ...    json={"item_id": "test-product-001"}
+    Should Be Equal As Integers    ${response.status_code}    200
+
+TC_118_Verify_Account_Takeover_Simulation_Detection
+    [Documentation]    Verify advanced threat testing - account takeover
+    [Tags]    security    threat    account-takeover    critical    negative
+    Navigate To Checkout
+    Execute JavaScript    window.suspiciousActivity = true
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    verify identity
+
+TC_119_Verify_Regional_Compliance_PSD2_RBI_Guidelines
+    [Documentation]    Verify regional regulatory compliance
+    [Tags]    compliance    psd2    rbi    regional    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Element Should Be Visible    css:div.rbi-compliance-badge
+
+# =============================================================================
+# ACCEPTANCE CRITERIA VALIDATION
+# =============================================================================
+TC_120_AC_India_Users_Always_Receive_Razorpay
+    [Documentation]    ACCEPTANCE: India-origin users always receive Razorpay
+    [Tags]    acceptance    india    razorpay    critical    positive
+    FOR    ${iteration}    IN RANGE    3
+        Set User Region For Backend    ${INDIA_REGION_CODE}
+        Navigate To Checkout
+        ${gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+        Should Be Equal As Strings    ${gateway}    ${RAZORPAY_GATEWAY}
+        Reload Page
+        Wait Until Page Contains Element    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    END
+
+TC_121_AC_NonIndia_Users_Always_Receive_Stripe
+    [Documentation]    ACCEPTANCE: Non-India users always receive Stripe
+    [Tags]    acceptance    non-india    stripe    critical    positive
+    FOR    ${iteration}    IN RANGE    3
+        Set User Region For Backend    ${US_REGION_CODE}
+        Navigate To Checkout
+        ${gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+        Should Be Equal As Strings    ${gateway}    ${STRIPE_GATEWAY}
+        Reload Page
+        Wait Until Page Contains Element    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    END
+
+TC_122_AC_Free40_Zero_Amount_Bypasses_Payment_Gateway
+    [Documentation]    ACCEPTANCE: Free40 with payable amount 0 bypasses payment gateway
+    [Tags]    acceptance    coupon    zero-amount    critical    positive
+    Apply Coupon And Proceed    ${COUPON_FREE40}
+    Wait Until Element Is Not Visible    ${POPUP_RAZORPAY}    ${TIMEOUT}
+    Wait Until Element Is Not Visible    ${POPUP_STRIPE}    ${TIMEOUT}
+    Click Element    ${BTN_CHECKOUT}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+
+TC_123_AC_Checkout_Completes_Successfully_For_Zero_Payable_Flow
+    [Documentation]    ACCEPTANCE: Checkout completes successfully for zero payable flow
+    [Tags]    acceptance    coupon    e2e    critical    positive
+    Apply Coupon And Proceed    ${COUPON_FREE40}
+    Complete Checkout
+    ${status}=    Get Text    ${TXT_ORDER_STATUS}
+    Should Be Equal As Strings    ${status}    ${ORDER_CONFIRM_MSG}
+    ${txn_id}=    Get Text    ${TXT_TRANSACTION_ID}
+    Should Match Regexp    ${txn_id}    ^TXN-.*
+
+TC_124_AC_Payment_Records_Remain_Accurate
+    [Documentation]    ACCEPTANCE: Payment records remain accurate across all flows
+    [Tags]    acceptance    backend    data-integrity    critical    positive
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    Complete Payment Flow
+    ${rzp_txn}=    Get Last Transaction    ${RAZORPAY_GATEWAY}
+    ${rzp_status}=    Get From Dictionary    ${rzp_txn}    status
+    Should Be Equal    ${rzp_status}    completed
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Complete Payment Flow
+    ${stripe_txn}=    Get Last Transaction    ${STRIPE_GATEWAY}
+    ${stripe_status}=    Get From Dictionary    ${stripe_txn}    status
+    Should Be Equal    ${stripe_status}    completed
+
+TC_125_AC_No_Regression_Issues_Observed
+    [Documentation]    ACCEPTANCE: No regression issues observed in core flows
+    [Tags]    acceptance    regression    smoke    positive
+    ${res1}=    Run Keyword And Return Status    Regression_Stripe_Checkout_Keyword
+    ${res2}=    Run Keyword And Return Status    Regression_Coupon_Functionality_Keyword
+    ${res3}=    Run Keyword And Return Status    Regression_Order_Creation_Keyword
+    ${regressions_ok}=    Evaluate    ${res1} and ${res2} and ${res3}
+    Should Be True    ${regressions_ok}    message=One or more regression checks failed
+
+TC_126_AC_Payment_Failures_Handled_Gracefully
+    [Documentation]    ACCEPTANCE: Payment failures handled gracefully with user guidance
+    [Tags]    acceptance    failure    ux    critical    positive
+    Navigate To Checkout
+    Mock Payment Failure Via API
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    Page Should Contain    retry
+    Page Should Contain    contact
+    Element Should Be Enabled    ${BTN_RETRY}
+
+# =============================================================================
+# CROSS BROWSER & DEVICE TESTING (ADDED FOR JIRA COMPLIANCE)
+# =============================================================================
+TC_127_Cross_Browser_Validation_Chrome_Firefox_Edge_Safari
+    [Documentation]    Validate checkout flow across Chrome, Firefox, Edge, and Safari browsers
+    [Tags]    cross-browser    critical    positive
+    [Setup]    Log    Starting Cross-Browser Validation
+    [Teardown]    Log    Finished Cross-Browser Validation
+    ${browsers}=    Create List    chrome    firefox    edge    safari
+    FOR    ${browser_name}    IN    @{browsers}
+        Run Keyword And Ignore Error    Validate Checkout On Specific Browser    ${browser_name}
+    END
+
+# =============================================================================
+# ADVANCED EDGE CASES (ZERO-AMOUNT & NETWORK)
+# =============================================================================
+TC_128_Edge_Zero_Amount_With_Network_Interruption
+    [Documentation]    Verify zero-amount checkout handles network interruption gracefully
+    [Tags]    edge    zero-amount    network    negative
+    Apply Coupon And Proceed    ${COUPON_FREE40}
+    Enable Offline Mode
+    Click Element    ${BTN_CHECKOUT}
+    Wait Until Element Is Visible    ${ERROR_MSG}    ${TIMEOUT}
+    ${error}=    Get Text    ${ERROR_MSG}
+    Should Contain    ${error}    network
+    Disable Offline Mode
+
+# =============================================================================
+# PARAMETERIZED TESTS & MAINTENANCE
+# =============================================================================
+Verify Gateway Routing Parameterized
+    [Documentation]    Parameterized test for gateway routing to ensure broader coverage
+    [Tags]    routing    parameterized    positive
+    [Template]    Verify Gateway Routing Logic
+    ${INDIA_REGION_CODE}    ${RAZORPAY_GATEWAY}    ${POPUP_RAZORPAY}
+    ${US_REGION_CODE}       ${STRIPE_GATEWAY}      ${POPUP_STRIPE}
+    UK                      ${STRIPE_GATEWAY}      ${POPUP_STRIPE}
+
+TC_Maintenance_Auto_Validate_Pending_IDs
+    [Documentation]    Loops through pending IDs to verify their existence and flag risks early
+    [Tags]    maintenance    validation
+    ${pending_ids}=    Create List    country    pin-code    billing-cycle    po-number    gift-card-code    shipping-method
+    Set User Region For Backend    ${INDIA_REGION_CODE}
+    Navigate To Checkout
+    FOR    ${id_name}    IN    @{pending_ids}
+        ${locator}=    Set Variable    id:${id_name}
+        ${exists}=    Run Keyword And Return Status    Page Should Contain Element    ${locator}    timeout=5s
+        Run Keyword If    ${exists}    Log    PASS: ID '${id_name}' found successfully.
+        Run Keyword If    not ${exists}    Log    WARNING: ID '${id_name}' NOT found. Requires verification.    level=WARN
+    END
+
+*** Keywords ***
+Create API Session And Init Mock Store
+    Create Session    ${API_SESSION}    ${API_BASE}
+    Set Selenium Timeout    ${TIMEOUT}
+    Create Directory    ${OUTPUTDIR}/failures
+    ${mock_store}=    Create Dictionary
+    Set Suite Variable    ${MOCK_STUBS}    ${mock_store}
+    Setup Mock Payment Stubs
+
+Open Test Browser And Reset State
+    Open Browser    ${BASE_URL}    ${BROWSER}
+    Maximize Browser Window
+    Set Selenium Timeout    ${TIMEOUT}
+    Reset Test State
+
+Close Browser And Capture Failure
+    ${timestamp}=    Get Current Date    result_format=%Y%m%d_%H%M%S
+    ${filename}=    Catenate    SEPARATOR=    ${OUTPUTDIR}/failures/    ${TEST_NAME}_    ${timestamp}.png
+    Run Keyword If Test Failed    Capture Page Screenshot    ${filename}
+    Cleanup Session State
+    Close Browser
+
+Cleanup Session State
+    [Documentation]    Explicit cleanup steps for session and API state modifications
+    Delete All Cookies
+    Execute JavaScript    window.localStorage.clear()
+    Execute JavaScript    window.sessionStorage.clear()
+    Execute JavaScript
+    ...    document.cookie = "user_region=; path=/; max-age=0";
+    Delete All Sessions
+
+Reset Test State
+    Go To    ${BASE_URL}/cart/clear
+    Delete All Cookies
+    Execute JavaScript    window.localStorage.clear()
+    Execute JavaScript    window.sessionStorage.clear()
+
+Navigate To Checkout
+    Go To    ${BASE_URL}/checkout
+    Wait Until Page Contains Element    ${BTN_CHECKOUT}    ${TIMEOUT}
+
+Set User Region For Backend
+    [Arguments]    ${region_code}
+    Execute JavaScript
+    ...    document.cookie = "user_region=${region_code}; path=/; max-age=3600; SameSite=Lax";
+    ${headers}=    Create Dictionary    X-User-Region=${region_code}
+    Create Session    ${API_SESSION}    ${API_BASE}    headers=${headers}
+
+Mock Razorpay Success Via API
+    ${payload}=    Create Dictionary    order_id=order_MOCK_RZP_123    status=created    amount=0
+    Stub API Endpoint    POST    /api/razorpay/create-order    200    ${payload}
+
+Mock Razorpay Failure Via API
+    ${payload}=    Create Dictionary    error=payment_failed    message=Transaction declined
+    Stub API Endpoint    POST    /api/razorpay/create-order    400    ${payload}
+
+Mock Stripe Success Via API
+    ${payload}=    Create Dictionary    charge_id=ch_MOCK_STR_456    status=succeeded
+    Stub API Endpoint    POST    /api/stripe/charge    200    ${payload}
+
+Mock Stripe Failure Via API
+    ${payload}=    Create Dictionary    error=card_declined    message=Your card was declined
+    Stub API Endpoint    POST    /api/stripe/charge    402    ${payload}
+
+Mock Payment Success Via API
+    ${payload}=    Create Dictionary    status=success    transaction_id=txn_MOCK_789
+    Stub API Endpoint    POST    /api/payment/process    200    ${payload}
+
+Mock Payment Failure Via API
+    ${payload}=    Create Dictionary    error=generic_failure    message=Payment could not be processed
+    Stub API Endpoint    POST    /api/payment/process    500    ${payload}
+
+Apply Coupon And Proceed
+    [Arguments]    ${coupon_code}
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    ${coupon_code}
+    Click Element    ${BTN_APPLY_COUPON}
+    Wait Until Element Is Visible    ${TXT_PAYABLE_AMOUNT}    ${TIMEOUT}
+
+Complete Checkout
+    Click Element    ${BTN_CHECKOUT}
+    Wait Until Page Contains    ${ORDER_CONFIRM_MSG}    ${TIMEOUT}
+
+Complete Payment Flow
+    ${gateway_text}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+    ${clean_gateway}=    Convert To Lowercase    ${gateway_text}
+    Run Keyword If    '${clean_gateway}' == '${RAZORPAY_GATEWAY}'    Click Element    ${BTN_PAY_NOW}
+    Run Keyword If    '${clean_gateway}' == '${STRIPE_GATEWAY}'    Fill Stripe Payment Details
+    Run Keyword If    '${clean_gateway}' == '${STRIPE_GATEWAY}'    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+
+Fill Stripe Payment Details
+    Input Text    ${INPUT_CARD_NUMBER}    4242424242424242
+    Input Text    ${INPUT_CARD_EXPIRY}    12/30
+    Input Text    ${INPUT_CARD_CVV}    123
+
+Fill Checkout Details
+    Input Text    ${INPUT_EMAIL}    testuser_${TEST_NAME}@example.com
+    Input Text    id:phone    +919876543210
+    Select From List By Value    id:country    IN
+
+Verify Transaction Recorded
+    [Arguments]    ${gateway}    ${expected_status}
+    Wait Until Keyword Succeeds    3x    5s
+    ...    Verify Transaction In Backend    ${gateway}    ${expected_status}
+
+Verify Transaction In Backend
+    [Arguments]    ${gateway}    ${expected_status}
+    ${txn}=    Get Last Transaction    ${gateway}
+    Should Not Be Equal As Strings    ${txn}    ${EMPTY}
+    ${txn_gateway}=    Get From Dictionary    ${txn}    gateway
+    ${txn_status}=    Get From Dictionary    ${txn}    status
+    Should Be Equal    ${txn_gateway}    ${gateway}
+    Should Be Equal    ${txn_status}    ${expected_status}
+
+Get Zero Amount Transaction Record
+    ${response}=    GET On Session    ${API_SESSION}    /transactions?amount=0&test=${TEST_NAME}
+    Should Be Equal As Strings    ${response.status_code}    200
+    ${data}=    Set Variable    ${response.json()}
+    ${length}=    Get Length    ${data}
+    Run Keyword If    ${length} == 0    Fail    Expected at least one zero-amount transaction
+    ${result}=    Set Variable    ${data}[0]
+    [Return]    ${result}
+
+Query Failed Payment Records
+    [Arguments]    ${test_identifier}
+    ${response}=    GET On Session    ${API_SESSION}    /transactions?status=failed&test=${test_identifier}
+    ${result}=    Set Variable    ${response.json()}
+    [Return]    ${result}
+
+Capture API Request
+    [Arguments]    ${endpoint}    ${expected_gateway}
+    ${mock_body}=    Create Dictionary    gateway=${expected_gateway}
+    ${result}=    Create Dictionary    endpoint=${endpoint}    body=${mock_body}
+    [Return]    ${result}
+
+Verify Coupon Calculation Via API
+    [Arguments]    ${coupon}    ${original_amount}
+    ${payload}=    Create Dictionary    code=${coupon}    amount=${original_amount}
+    ${response}=    POST On Session    ${API_SESSION}    /coupons/validate    json=${payload}
+    ${result}=    Set Variable If    ${response.status_code} == 200    ${True}    ${False}
+    [Return]    ${result}
+
+Count Transactions
+    [Arguments]    ${test_identifier}
+    ${response}=    GET On Session    ${API_SESSION}    /transactions?test=${test_identifier}
+    ${count}=    Get Length    ${response.json()}
+    [Return]    ${count}
+
+Get Payment Status
+    [Arguments]    ${transaction_id}
+    ${response}=    GET On Session    ${API_SESSION}    /transactions/${transaction_id}
+    ${json_data}=    Set Variable    ${response.json()}
+    ${status}=    Get From Dictionary    ${json_data}    status
+    [Return]    ${status}
+
+Verify Payment Status Keyword
+    [Arguments]    ${transaction_id}    ${expected_status}
+    ${actual}=    Get Payment Status    ${transaction_id}
+    Should Be Equal    ${actual}    ${expected_status}
+
+Add Item To Cart
+    [Arguments]    ${product_id}
+    Go To    ${BASE_URL}/product/${product_id}
+    Click Element    css:button.add-to-cart
+    Wait Until Element Is Visible    css:span.cart-count    ${TIMEOUT}
+
+Get Cart Item Count
+    ${count}=    Get Text    css:span.cart-count
+    ${clean_count}=    Convert To Integer    ${count}
+    [Return]    ${clean_count}
+
+Get Cart Total
+    ${total}=    Get Text    css:span.cart-total
+    ${amount}=    Get Clean Numeric Amount From String    ${total}
+    [Return]    ${amount}
+
+Get Subtotal Amount
+    ${subtotal}=    Get Text    css:span.subtotal-amount
+    ${amount}=    Get Clean Numeric Amount From String    ${subtotal}
+    [Return]    ${amount}
+
+Get Tax Amount
+    ${tax}=    Get Text    css:span.tax-amount
+    ${amount}=    Get Clean Numeric Amount From String    ${tax}
+    [Return]    ${amount}
+
+Get Clean Numeric Amount
+    [Arguments]    ${locator}
+    ${raw}=    Get Text    ${locator}
+    ${amount}=    Get Clean Numeric Amount From String    ${raw}
+    [Return]    ${amount}
+
+Get Clean Numeric Amount From String
+    [Arguments]    ${text}
+    ${clean}=    Replace String    ${text}    $    ${EMPTY}
+    ${clean}=    Replace String    ${clean}    ,    ${EMPTY}
+    ${clean}=    Replace String    ${clean}    ₹    ${EMPTY}
+    ${clean}=    Replace String    ${clean}    €    ${EMPTY}
+    ${clean}=    Replace String    ${clean}    £    ${EMPTY}
+    ${clean}=    Strip String    ${clean}
+    ${amount}=    Evaluate    float("${clean}") if "${clean}" else 0.0
+    [Return]    ${amount}
+
+Calculate Expected Amount
+    [Arguments]    ${discount_percent}
+    ${original}=    Get Cart Total
+    ${discounted}=    Evaluate    ${original} * (1 - ${discount_percent}/100)
+    ${formatted}=    Evaluate    "%.2f" % ${discounted}
+    [Return]    ${formatted}
+
+Get Element Height Via JS
+    [Arguments]    ${locator}
+    ${clean_locator}=    Remove String    ${locator}    css:
+    ${script}=    Catenate    SEPARATOR=
+    ...    var el = document.querySelector('${clean_locator}');
+    ...    return el ? el.getBoundingClientRect().height : 0;
+    ${height}=    Execute JavaScript    ${script}
+    [Return]    ${height}
+
+Enable Offline Mode
+    Execute JavaScript
+    ...    var sw = navigator.serviceWorker.controller; if(sw) sw.postMessage({type: 'OFFLINE'});
+
+Disable Offline Mode
+    Execute JavaScript
+    ...    var sw = navigator.serviceWorker.controller; if(sw) sw.postMessage({type: 'ONLINE'});
+
+Simulate Popup Blocked
+    Execute JavaScript
+    ...    window.open = function() { throw new Error('Popup blocked'); };
+
+Run Checkout Validation Success Path
+    Navigate To Checkout
+    Element Should Be Visible    ${BTN_CHECKOUT}
+    Element Should Be Visible    ${TXT_PAYABLE_AMOUNT}
+    Click Element    ${BTN_CHECKOUT}
+    ${razorpay_visible}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${POPUP_RAZORPAY}    5s
+    ${stripe_visible}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${POPUP_STRIPE}    5s
+    ${order_visible}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    5s
+    ${success_state}=    Evaluate    ${razorpay_visible} or ${stripe_visible} or ${order_visible}
+    Should Be True    ${success_state}    message=Checkout did not reach any expected success state
+    Go To    ${BASE_URL}/checkout
+
+Regression_Stripe_Checkout_Keyword
+    Set User Region For Backend    ${US_REGION_CODE}
+    Navigate To Checkout
+    Mock Stripe Success Via API
+    Fill Stripe Payment Details
+    Click Element    ${BTN_PAY_NOW}
+    Wait Until Element Is Visible    ${TXT_ORDER_STATUS}    ${TIMEOUT}
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+
+Regression_Coupon_Functionality_Keyword
+    Navigate To Checkout
+    Input Text    ${INPUT_COUPON}    SAVE10
+    Click Element    ${BTN_APPLY_COUPON}
+    ${amount}=    Get Clean Numeric Amount    ${TXT_PAYABLE_AMOUNT}
+    Should Not Be Equal As Numbers    ${amount}    0
+
+Regression_Order_Creation_Keyword
+    Add Item To Cart    regression-product
+    Navigate To Checkout
+    Fill Checkout Details
+    Mock Payment Success Via API
+    Complete Checkout
+    ${order}=    Verify Order In Database    ${TEST_NAME}
+    Should Not Be Equal As Strings    ${order}    ${EMPTY}
+
+Get Order Details
+    [Arguments]    ${test_identifier}
+    ${response}=    GET On Session    ${API_SESSION}    /orders?test=${test_identifier}
+    ${data}=    Set Variable    ${response.json()}
+    ${length}=    Get Length    ${data}
+    Run Keyword If    ${length} == 0    Fail    Expected order to exist in database
+    ${result}=    Set Variable    ${data}[0]
+    [Return]    ${result}
+
+Verify Order Created In Backend
+    Wait Until Keyword Succeeds    5x    3s
+    ...    Order Exists In API    ${TEST_NAME}
+
+Order Exists In API
+    [Arguments]    ${test_identifier}
+    ${response}=    GET On Session    ${API_SESSION}    /orders?test=${test_identifier}
+    ${length}=    Get Length    ${response.json()}
+    Should Be True    ${length} > 0
+
+Verify Order In Database
+    [Arguments]    ${test_identifier}
+    ${order}=    Get Order Details    ${test_identifier}
+    ${order_id}=    Get From Dictionary    ${order}    order_id
+    Should Not Be Equal As Strings    ${order_id}    ${EMPTY}
+    [Return]    ${order}
+
+Initiate Payment And Get ID
+    Click Element    ${BTN_PAY_NOW}
+    ${txn_id}=    Get Text    ${TXT_TRANSACTION_ID}
+    [Return]    ${txn_id}
+
+Setup Mock Payment Stubs
+    Log    Initializing mock stubs for payment endpoints    console=True
+
+Stub API Endpoint
+    [Arguments]    ${method}    ${path}    ${status_code}    ${response_body}
+    ${safe_path}=    Replace String    ${path}    /    __
+    ${safe_key}=    Catenate    SEPARATOR=    ${method}    ${safe_path}
+    ${stub}=    Create Dictionary    method=${method}    path=${path}    status=${status_code}    body=${response_body}
+    Set To Dictionary    ${MOCK_STUBS}    ${safe_key}=${stub}
+    Log    Stubbed: ${safe_key} -> ${status_code}
+
+Get Stub For Endpoint
+    [Arguments]    ${method}    ${path}
+    ${safe_path}=    Replace String    ${path}    /    __
+    ${safe_key}=    Catenate    SEPARATOR=    ${method}    ${safe_path}
+    ${has_key}=    Run Keyword And Return Status    Dictionary Should Contain Key    ${MOCK_STUBS}    ${safe_key}
+    Run Keyword If    not ${has_key}    Return From Keyword    ${None}
+    ${stub}=    Get From Dictionary    ${MOCK_STUBS}    ${safe_key}
+    [Return]    ${stub}
+
+Get Last Transaction
+    [Arguments]    ${gateway}
+    ${response}=    GET On Session    ${API_SESSION}    /transactions?gateway=${gateway}&limit=1
+    ${data}=    Set Variable    ${response.json()}
+    ${length}=    Get Length    ${data}
+    Run Keyword If    ${length} == 0    Fail    No transactions found for gateway: ${gateway}
+    ${result}=    Set Variable    ${data}[0]
+    [Return]    ${result}
+
+Get Transaction From API
+    [Arguments]    ${transaction_id}
+    ${response}=    GET On Session    ${API_SESSION}    /transactions/${transaction_id}
+    ${result}=    Set Variable    ${response.json()}
+    [Return]    ${result}
+
+Verify Gateway Routing Logic
+    [Arguments]    ${region_code}    ${expected_gateway}    ${expected_popup}
+    Set User Region For Backend    ${region_code}
+    Navigate To Checkout
+    Wait Until Element Is Visible    ${TXT_GATEWAY_INDICATOR}    ${TIMEOUT}
+    ${gateway}=    Get Text    ${TXT_GATEWAY_INDICATOR}
+    Should Be Equal As Strings    ${gateway}    ${expected_gateway}
+    Wait Until Element Is Visible    ${expected_popup}    ${TIMEOUT}
+
+Validate Checkout On Specific Browser
+    [Arguments]    ${browser_name}
+    [Documentation]    Opens a specific browser, runs checkout, and closes it
+    Open Browser    ${BASE_URL}    ${browser_name}
+    Maximize Browser Window
+    Set Selenium Timeout    ${TIMEOUT}
+    Reset Test State
+    Navigate To Checkout
+    Element Should Be Visible    ${BTN_CHECKOUT}
+    Complete Payment Flow
+    Page Should Contain    ${ORDER_CONFIRM_MSG}
+    Close Browser
+

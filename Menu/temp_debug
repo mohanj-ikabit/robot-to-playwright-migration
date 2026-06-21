@@ -1,0 +1,41 @@
+*** Settings ***
+Default tags      debug
+Library           SeleniumLibrary
+Resource          ../Resource/dropdownlist.robot
+Resource          ../Resource/numericalvalue.robot
+Resource          ../Resource/genericfunctions.robot
+Resource          ../Resource/textfield.robot
+Resource          ../Resource/button.robot 
+Resource          ../Resource/Checkbox.robot
+Resource          ../Resource/radio button.robot
+Resource          ../Resource/button.robot
+Resource          ../Resource/Text on form.robot
+*** Test Cases ***
+Enter_menu
+    login
+    Click Element    xpath=//*[@href="/user/menu-help"]
+    Click Element    xpath=//*[@href="/user/menu-items/add-menu-items"]
+
+   
+ScrollElementIntoView1_checkbox_dishBelongsTo
+    Scroll Element Into View     xpath=//*[@id="dishBelongsTo"]
+    
+ScrollElementIntoView2_checkbox_ingredOne
+    Scroll Element Into View     xpath=//*[@id="dishBelongsTo"] 
+    
+Categories_This_Dish_Belongs_To_default
+    4_1_6_1_DDL_LB_Default    dishBelongsTo
+#Categories_This_Dish_Belongs_To_value_list
+    #4_1_6_2_DDL_LB_value_list    //*[@id="dishBelongsTo"]    1
+Categories_This_Dish_Belongs_To_select_value
+    4_1_6_3_DDL_LB_select_value     dishBelongsTo
+Categories_This_Dish_Belongs_To_view_size
+    4_1_6_7_DDL_LB_view_size    dishBelongsTo
+Categories_This_Dish_Belongs_To_wider_than_list_size
+    4_1_6_8_DDL_LB_content_wider_than_list_size    dishBelongsTo
+Categories_This_Dish_Belongs_To_selection
+    4_1_6_9_DDL_no_multi_selection    dishBelongsTo
+Categories_This_Dish_Belongs_To_label
+    4_1_6_11_DDL_LB_field_label    dishBelongsTo    Categories This Dish Belongs To?*
+Categories_This_Dish_Belongs_To_order
+    4_1_6_14_DDL_LB_list order    dishBelongsTo   

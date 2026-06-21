@@ -1,0 +1,29 @@
+*** Settings ***
+Library           SeleniumLibrary
+Resource          ../Resource/genericfunctions.robot
+
+*** Test Cases ***    
+5.10.1.5_leftmenu_test_navigation_accountsettings_valid
+    login
+    log to console  left menu options
+    page should contain  Restaurant Info
+    log to console  Restaurant Info
+    page should contain  Menu Settings
+    log to console Menu Settings
+    page should contain  Account Settings
+    log to console Account Settings
+    page should contain  Admin Settings
+    log to console Admin Settings
+    page should contain  Logout
+    log to console Logout
+    log to console    clicking menu settings 
+    click element    xpath=//*[@href="/user/account-settings"]
+    page should contain  Account Settings
+    click element    xpath=//*[id="/html/body/div[1]/div/div/div[2]/div[2]/div/div/div/div/div[2]/div/div[1]/div[1]/div[2]/span[1]/svg/path"]
+    click element    xpath=//*[id="/html/body/div[1]/div/div/div[2]/div[2]/div/div/div/div/div[2]/div/div[1]/div[1]/div[2]/span[1]/svg/path"]   
+     ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/logout/user/logout""]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Logout Enabled     
+    ...   ELSE   
+    ...   Log to Console  Logout Not Enabled
+    close browser

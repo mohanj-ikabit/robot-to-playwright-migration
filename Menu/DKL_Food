@@ -1,0 +1,63 @@
+*** Settings ***
+Default Tags      menunonalcbvg
+Library           SeleniumLibrary
+Resource         Resources/generalfunction.robot
+Suite Teardown    Close Browser
+
+
+*** Test Cases ***
+List food categories
+
+  log to console    going to menu sub categories - default tab - food
+     Wait Until Element Is Visible   xpath=//*[@href="/user/menu-settings/menu-sub-category"]  
+    click element    xpath=//*[@href="/user/menu-settings/menu-sub-category"]
+    log to console    going to non alcoholic beverages togo
+    Sleep  2s
+    page should contain    Food
+    Sleep  2s
+    Page Should Contain Element    xpath=//*[@id="left-Wraps"]   
+    Log to Console      Wraps 
+    Page Should Contain Element    xpath=//*[@id="left-Vegetarian"] 
+    Log to Console      Vegetarian  
+    Page Should Contain Element    xpath=//*[@id="left-Vegan"]  
+    Log to Console      Vegan
+    Page Should Contain Element    xpath=//*[@id="left-Veal"] 
+    Log to Console      Veal
+    Page Should Contain Element    xpath=//*[@id="left-Sweets"] 
+    Log to Console      Sweets
+    Page Should Contain Element    xpath=//*[@id="left-Stew"] 
+    Log to Console      Stew
+    Page Should Contain Element    xpath=//*[@id="left-Steak"]  
+    Log to Console      Steak
+    Scroll Element Into View     xpath=//*[@id="left-A La Carte"]
+    Sleep  1s
+    Click Element   xpath=//*[@id="left-A La Carte"]
+    Sleep  2s
+    Scroll Element Into View       xpath=//*[@id="add-button"]
+    Wait Until Element Is Visible      xpath=//*[@id="add-button"]
+    Sleep   2s
+    Click Element    xpath=//*[@id="add-button"]
+    Page Should Contain Element    xpath=//*[@id="right-A La Carte"]  
+    Click Element   xpath=//*[@id="right-A La Carte"]  
+    Click Element   xpath=//*[@id="remove-button"]
+   Page Should Contain Element    xpath=//*[@id="left-A La Carte"]  
+#    Click Element     xpath=//*[@id="left-Stew"] 
+#    Click Element    xpath=//*[@id="add-button"]
+#    Page Should Contain Element    xpath=//*[@id="right-Stew"]
+#    Sleep  4s  
+#    Click Element   xpath=//*[@id="right-Stew"]  
+#    Click Element   xpath=//*[@id="remove-button"]
+#    Page Should Contain Element    xpath=//*[@id="left-Stew"]
+#    Sleep  4s
+#    Click Element   xpath=//*[@id="left-Appetizers"]
+#    Sleep  2s
+#    Scroll Element Into View       xpath=//*[@id="add-button"]
+#    Wait Until Element Is Visible      xpath=//*[@id="add-button"]
+#    Sleep   2s
+#    Click Element    xpath=//*[@id="add-button"]
+#    Page Should Contain Element    xpath=//*[@id="right-Appetizers"]  
+#    Sleep   2s
+#    Click Element   xpath=//*[@id="right-Appetizers"]  
+#    Click Element   xpath=//*[@id="remove-button"]
+#    Page Should Contain Element    xpath=//*[@id="left-Appetizers"]  
+    Sleep   2s

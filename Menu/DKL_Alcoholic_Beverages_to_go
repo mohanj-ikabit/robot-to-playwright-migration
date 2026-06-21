@@ -1,0 +1,59 @@
+*** Settings ***
+Default Tags      menunonalcbvg
+Library           SeleniumLibrary
+Resource         Resources/generalfunction.robot
+Suite Teardown    Close Browser
+
+*** Variables ***
+${SIGNUP_URL}    https://verify-getrestaurantapp-v1-0-0.d3bydizwdiwzbp.amplifyapp.com/
+
+*** Test Cases ***
+test
+    ${chrome_options}=    Evaluate    sys.modules['selenium.webdriver'].ChromeOptions()    sys, selenium.webdriver
+#    Call Method    ${chrome_options}    add_argument    headless
+#    Call Method    ${chrome_options}    add_argument    --disable-extensions
+#    Call Method    ${chrome_options}    add_argument    disable-gpu
+#    Call Method    ${chrome_options}    add_argument    --disable-dev-shm-usage
+#    Call Method    ${chrome_options}    add_argument    --no-sandbox
+    Create Webdriver    Chrome    chrome_options=${chrome_options}
+    Maximize Browser Window
+#    Set Window Size   ${2900}   ${2900}
+#  Execute javascript  document.body.style.zoom="70%"
+    Go To    ${SIGNUP_URL}
+    log to console    clicking Sign in
+    click element    xpath=//*[@href='/login']
+    log to console    entering login............ grapp32.user@outlook.com
+    SeleniumLibrary.Input Text    xpath=//*[@id='email']    grapp32.user@outlook.com
+    log to console    entering password...................Test@123
+    SeleniumLibrary.Input Text    xpath=//*[@id='password']    Test@123
+    log to console    entering restaurant id.........................30084103
+    SeleniumLibrary.Input Text    xpath=//input[@id="company-id"]    30084103
+    log to console    clicking submit
+    SeleniumLibrary.Click Button    xpath=//*[@id='submit']
+    Wait Until Element Is Visible   xpath=//*[@href="/user/menu-settings"]
+    log to console    clicking menu settings
+    Click Element    xpath=//*[@href="/user/menu-settings"]
+    Wait Until Element Is Visible   xpath=//*[@href="/user/menu-settings/menu-sub-category"]  
+    Click Element     xpath=//*[@href="/user/menu-settings/menu-sub-category"] 
+    Sleep   2s
+    Click Element     xpath=//*[@href="/user/menu-settings/menu-sub-category/alcoholic-beverages-togo"] 
+    Sleep  2s
+    Click Element     xpath=//*[@id="alBvType1"] 
+    Sleep  2s
+    Page Should Contain    Beer
+    Log To Console         Beer    
+    Page Should Contain    Wine
+    Log To Console         Wine
+    Page Should Contain    Cider  
+    Log To Console         Cider  
+    Page Should Contain    Liquor/Spirits
+    Log to Console         Liquor/Spirits
+    Page Should Contain    Others  
+    Log to Console         Others    
+    Sleep   4s
+    Click Element     xpath=//*[contains(text(),"Cider")]
+    Sleep   4s
+    ${value}=   Get Element Attribute    xpath=//*[@name="alBvType"]    value
+    Sleep  2s
+    Log to Console      ${value}
+    Sleep   4s

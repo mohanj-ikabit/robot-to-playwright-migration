@@ -1,0 +1,84 @@
+*** Settings ***
+Library           SeleniumLibrary
+Resource          ../Resource/genericfunctions.robot
+
+*** Test Cases ***
+5.10.1.3_leftmenu_test_navigation_menusettings_null  
+    login
+    log to console  left menu options
+    page should contain  Restaurant Info
+    log to console  Restaurant Info
+    page should contain  Menu Settings
+    log to console Menu Settings
+    page should contain  Account Settings
+    log to console Account Settings
+    page should contain  Admin Settings
+    log to console Admin Settings
+    page should contain  Logout
+    log to console Logout
+    log to console    clicking menu settings 
+    click element    xpath=//*[@href="/user/menu-help"]
+    Checkbox Should Be Selected      xpath=//*[@id="Yes"]
+    ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/user/menu-category"]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Menu Category Enabled     
+    ...   ELSE   
+    ...   Log to Console  Menu Category Not Enabled    
+    ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/user/account-settings"]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Account Settings Enabled     
+    ...   ELSE   
+    ...   Log to Console  Account Settings Not Enabled    
+    ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/user/permission-approvals"]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Admin Settings Enabled     
+    ...   ELSE   
+    ...   Log to Console  Admin Settings Not Enabled    
+     ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/logout/user/logout""]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Logout Enabled     
+    ...   ELSE   
+    ...   Log to Console  Logout Not Enabled
+    close browser
+    
+    
+5.10.1.4_leftmenu_test_navigation_menusettings_valid
+    login
+    log to console  left menu options
+    page should contain  Restaurant Info
+    log to console  Restaurant Info
+    page should contain  Menu Settings
+    log to console Menu Settings
+    page should contain  Account Settings
+    log to console Account Settings
+    page should contain  Admin Settings
+    log to console Admin Settings
+    page should contain  Logout
+    log to console Logout
+    log to console    clicking menu settings 
+    click element    xpath=//*[@href="/user/menu-help"]
+    Checkbox Should Be Selected      xpath=//*[@id="Yes"]
+    ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/user/menu-category"]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Menu Category Enabled     
+    ...   ELSE   
+    ...   Log to Console  Menu Category Not Enabled    
+    ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/user/account-settings"]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Account Settings Enabled     
+    ...   ELSE   
+    ...   Log to Console  Account Settings Not Enabled    
+    ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/user/permission-approvals"]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Admin Settings Enabled     
+    ...   ELSE   
+    ...   Log to Console  Admin Settings Not Enabled    
+     ${STATUS}   Run Keyword And Return Status      Get Element Attribute    xpath=//*[@href="/logout/user/logout""]    enabled
+    Run Keyword If     '${STATUS}'== 'True'  
+    ...   log to console  Logout Enabled     
+    ...   ELSE   
+    ...   Log to Console  Logout Not Enabled
+    close browser
+
+    
+    

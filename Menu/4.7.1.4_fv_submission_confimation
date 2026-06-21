@@ -1,0 +1,99 @@
+*** Settings ***
+Default tags      fv_addmenuitem_letsaddtomenu
+Library           SeleniumLibrary
+Resource          ../Resource/dropdownlist.robot
+Resource          ../Resource/numericalvalue.robot
+Resource          ../Resource/genericfunctions.robot
+Resource          ../Resource/textfield.robot
+Resource          ../Resource/button.robot 
+Resource          ../Resource/Checkbox.robot
+Resource          ../Resource/radio button.robot
+Resource          ../Resource/button.robot
+Resource          ../Resource/Text on form.robot
+*** Test Cases ***
+Enter_menu
+    login pkg1
+    Click Element    xpath=//*[@href="/user/menu-help"]
+    Click Element    xpath=//*[@href="/user/menu-items/add-menu-items"]
+NameOfTheDish_text_not_null
+    4_1_1_1_text_notnull    dishName
+NameOfTheDish_text_splchar_allowed
+    4_1_1_2_text_splchar_allowed    dishName
+NameOfTheDish_text_numbers_allowed
+    4_1_1_4_text_numbers_allowed    dishName
+NameOfTheDish_text_minlength
+    4_1_1_6_text_minlength    dishName     z
+#NameOfTheDish_text_maxlength
+    #4_1_1_7_text_maxlength    dishName     Like any other social media site Facebook has length requirements when it comes to writing on the wa
+NameOfTheDish_text_maxlength_new
+    4_1_1_7_text_maxlength_new    dishName   40
+NameOfTheDish_text_pastable
+    4_1_1_9_text_pastable    dishName
+NameOfTheDish_text_spacebefore
+    4_1_1_11_text_spacebefore    dishName
+NameOfTheDish_text_spaceafter
+    4_1_1_12_text_spaceafter    dishName
+NameOfTheDish_text_default_value
+    4_1_1_14_text_field_default_value   dishName-label    Enter Dish Name
+NameOfTheDish_text_default_state_enabled
+    4_1_1_15_text_field_default_state_enabled    dishName
+NameOfTheDish_text_label
+    4_1_1_17_text_field_label    dishName-label    Enter Dish Name
+NameOfTheDish_text_space_allowed
+    4_1_1_18_text_field_space_allowed    dishName
+#DishComesWith_text_not_null
+    #4_1_1_1_text_notnull    dishComesWith
+DishComesWith_text_splchar_allowed
+    4_1_1_2_text_splchar_allowed    dishComesWith
+DishComesWith_text_numbers_allowed
+    4_1_1_4_text_numbers_allowed    dishComesWith
+DishComesWith_text_minlength
+    4_1_1_6_text_minlength    dishComesWith     z
+#DishComesWith_text_maxlength
+    #4_1_1_7_text_maxlength    dishComesWith     Like any other social media site Facebook has length requirements when it comes to writing on the wa
+DishComesWith_text_maxlength_new
+    4_1_1_7_text_maxlength_new    dishComesWith   40
+DishComesWith_text_pastable
+    4_1_1_9_text_pastable    dishComesWith
+DishComesWith_text_spacebefore
+    4_1_1_11_text_spacebefore    dishComesWith
+DishComesWith_text_spaceafter
+    4_1_1_12_text_spaceafter    dishComesWith
+DishComesWith_text_default_value
+    4_1_1_14_text_field_default_value   dishComesWith-label    Enter Dish Name
+DishComesWith_text_default_state_enabled
+    4_1_1_15_text_field_default_state_enabled    dishComesWith
+DishComesWith_text_label
+    4_1_1_17_text_field_label    dishComesWith-label    Enter Dish Name
+DishComesWith_text_space_allowed
+    4_1_1_18_text_field_space_allowed    dishComesWith
+calories_numeric_field_zero
+    4_1_5_2_numeric_field_zero    calories
+calories_numeric_field_not_lt_zero
+    4_1_5_3_numeric_field_not_lt_zero    calories
+calories_numeric_field_no_alphabets
+    4_1_5_4_numeric_field_no_alphabets    calories
+calories_numeric_field_no_splchars
+    4_1_5_5_numeric_field_no_splchars    calories
+calories_numeric_field_maxlength
+    4_1_5_7_numeric_field_maxlength    calories    987654
+calories_numeric_field_no_spaces
+    4_1_5_8_numeric_field_no_spaces    calories
+calories_numeric_field_decimal_not_permitted
+    4_1_5_10_numeric_field_decimal_not_permitted    calories
+calories_numeric_field_pastable
+    4_1_5_11_numeric_field_pastable    calories
+calories_numeric_field_leading_zeroes_stripped
+    4_1_5_12_numeric_leading_zeroes_stripped    calories
+calories_numeric_field_spacebefore
+    4_1_5_13_numeric_spacebefore       calories
+calories_numeric_field_spaceafter
+    4_1_5_14_numeric_spaceafter    calories
+calories_numeric_field_default_value
+    4_1_5_15_numeric_field_default_value    calories    ${EMPTY}
+calories_numeric_field_default_state_enabled
+    4_1_5_16_numeric_field_default_state_enabled    calories
+#calories_numeric_field_label
+    #4_1_5_19_numeric_field_label    calories    Calories:   
+    
+ScrollElementIntoView1_checkbox_dishBelongsTo
